@@ -32,12 +32,13 @@ import {
   getMarketServersByCategory,
   getMarketServersByTag,
 } from '../controllers/marketController.js';
-import { login, register, getCurrentUser, changePassword } from '../controllers/authController.js';
+import { login, register, getCurrentUser, changePassword, initiateGitHubAuth, handleGitHubCallback } from '../controllers/authController.js';
 import { getAllLogs, clearLogs, streamLogs } from '../controllers/logController.js';
 import { getRuntimeConfig, getPublicConfig } from '../controllers/configController.js';
 import { callTool } from '../controllers/toolController.js';
 import { uploadDxtFile, uploadMiddleware } from '../controllers/dxtController.js';
 import { auth } from '../middlewares/auth.js';
+import axios from 'axios';
 
 const router = express.Router();
 
@@ -116,6 +117,10 @@ export const initRoutes = (app: express.Application): void => {
     ],
     changePassword,
   );
+
+  // GitHub OAuth 라우트 추가
+  router.get('/auth/github', initiateGitHubAuth);
+  router.get('/auth/github/callback', handleGitHubCallback);
 
   // Runtime configuration endpoint (no auth required for frontend initialization)
   app.get(`${config.basePath}/config`, getRuntimeConfig);
