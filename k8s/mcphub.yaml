@@ -1,0 +1,250 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcphub
+  namespace: mcphub
+  labels:
+    app: mcphub
+    version: v1
+spec:
+  replicas: 3  # 고가용성을 위한 3개 replica
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0  # 무중단 배포
+  selector:
+    matchLabels:
+      app: mcphub
+  template:
+    metadata:
+      labels:
+        app: mcphub
+        version: v1
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: mcphub
+        image: samanhappy/mcphub:latest  # 실제 이미지로 변경 필요
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+          protocol: TCP
+        env:
+        # ConfigMap에서 환경변수 로드
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: mcphub-config
+              key: NODE_ENV
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: mcphub-config
+              key: PORT
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: mcphub-config
+              key: LOG_LEVEL
+        - name: LOG_FORMAT
+          valueFrom:
+            configMapKeyRef:
+              name: mcphub-config
+              key: LOG_FORMAT
+        - name: CLUSTER_MODE
+          valueFrom:
+            configMapKeyRef:
+              name: mcphub-config
+              key: CLUSTER_MODE
+        - name: WORKER_PROCESSES
+          valueFrom:
+            configMapKeyRef:
+              name: mcphub-config
+              key: WORKER_PROCESSES
+        - name: GC_OPTIMIZE
+          valueFrom:
+            configMapKeyRef:
+              name: mcphub-config
+              key: GC_OPTIMIZE
+        - name: WORKER_RESTART_DELAY
+          valueFrom:
+            configMapKeyRef:
+              name: mcphub-config
+              key: WORKER_RESTART_DELAY
+        - name: WORKER_MAX_RESTARTS
+          valueFrom:
+            configMapKeyRef:
+              name: mcphub-config
+              key: WORKER_MAX_RESTARTS
+        - name: REDIS_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: mcphub-config
+              key: REDIS_ENABLED
+        - name: REDIS_KEY_PREFIX
+          valueFrom:
+            configMapKeyRef:
+              name: mcphub-config
+              key: REDIS_KEY_PREFIX
+        - name: REDIS_TTL
+          valueFrom:
+            configMapKeyRef:
+              name: mcphub-config
+              key: REDIS_TTL
+        - name: INIT_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: mcphub-config
+              key: INIT_TIMEOUT
+        - name: REQUEST_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: mcphub-config
+              key: REQUEST_TIMEOUT
+        - name: JWT_EXPIRES_IN
+          valueFrom:
+            configMapKeyRef:
+              name: mcphub-config
+              key: JWT_EXPIRES_IN
+        - name: BCRYPT_ROUNDS
+          valueFrom:
+            configMapKeyRef:
+              name: mcphub-config
+              key: BCRYPT_ROUNDS
+        - name: BASE_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: mcphub-config
+              key: BASE_PATH
+        # Secret에서 민감한 환경변수 로드
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: mcphub-secrets
+              key: JWT_SECRET
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: mcphub-secrets
+              key: REDIS_URL
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: mcphub-secrets
+              key: DATABASE_URL
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mcphub-secrets
+              key: OPENAI_API_KEY
+              optional: true
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: mcp-settings
+          mountPath: /app/mcp_settings.json
+          subPath: mcp_settings.json
+          readOnly: true
+        - name: data-volume
+          mountPath: /app/data
+        - name: logs-volume
+          mountPath: /app/logs
+        - name: tmp-volume
+          mountPath: /tmp
+      volumes:
+      - name: mcp-settings
+        configMap:
+          name: mcphub-mcp-settings
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: mcphub-data-pvc
+      - name: logs-volume
+        emptyDir: {}
+      - name: tmp-volume
+        emptyDir: {}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcphub-service
+  namespace: mcphub
+  labels:
+    app: mcphub
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: mcphub
+
+---
+# LoadBalancer 서비스 (외부 접근용)
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcphub-external
+  namespace: mcphub
+  labels:
+    app: mcphub
+    service-type: external
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  - port: 443
+    targetPort: 3000
+    protocol: TCP
+    name: https
+  selector:
+    app: mcphub
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mcphub-data-pvc
+  namespace: mcphub
+  labels:
+    app: mcphub
+spec:
+  accessModes:
+  - ReadWriteMany  # 여러 replica에서 공유 가능
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: "fast-ssd"  # 클러스터에 맞게 수정 필요 

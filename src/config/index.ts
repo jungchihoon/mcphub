@@ -3,6 +3,7 @@ import fs from 'fs';
 import { McpSettings } from '../types/index.js';
 import { getConfigFilePath } from '../utils/path.js';
 import { getPackageVersion } from '../utils/version.js';
+import os from 'os';
 
 dotenv.config();
 
@@ -13,6 +14,23 @@ const defaultConfig = {
   basePath: process.env.BASE_PATH || '',
   mcpHubName: 'mcphub',
   mcpHubVersion: getPackageVersion(),
+  // 클러스터 모드 설정
+  cluster: {
+    enabled: process.env.CLUSTER_MODE === 'true',
+    workers: parseInt(process.env.WORKER_PROCESSES || '0') || os.cpus().length,
+    memoryLimit: process.env.MEMORY_LIMIT || '512M',
+    cpuLimit: process.env.CPU_LIMIT,
+    gcOptimize: process.env.GC_OPTIMIZE === 'true',
+    restartDelay: parseInt(process.env.WORKER_RESTART_DELAY || '5000'),
+    maxRestarts: parseInt(process.env.WORKER_MAX_RESTARTS || '5'),
+  },
+  // Redis 설정 (클러스터 모드에서 상태 공유용)
+  redis: {
+    url: process.env.REDIS_URL || 'redis://localhost:6379',
+    enabled: process.env.REDIS_ENABLED === 'true' || process.env.CLUSTER_MODE === 'true',
+    keyPrefix: process.env.REDIS_KEY_PREFIX || 'mcphub:',
+    ttl: parseInt(process.env.REDIS_TTL || '3600'), // 1시간
+  },
 };
 
 // Settings cache

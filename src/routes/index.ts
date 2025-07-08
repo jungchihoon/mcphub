@@ -37,6 +37,7 @@ import { getAllLogs, clearLogs, streamLogs } from '../controllers/logController.
 import { getRuntimeConfig, getPublicConfig } from '../controllers/configController.js';
 import { callTool } from '../controllers/toolController.js';
 import { uploadDxtFile, uploadMiddleware } from '../controllers/dxtController.js';
+import { getHealth, getDetailedHealth, getClusterStatus } from '../controllers/healthController.js';
 import { auth } from '../middlewares/auth.js';
 
 const router = express.Router();
@@ -123,14 +124,10 @@ export const initRoutes = (app: express.Application): void => {
   // Public configuration endpoint (no auth required to check skipAuth setting)
   app.get(`${config.basePath}/public-config`, getPublicConfig);
 
-  // Health check endpoint (no auth required)
-  app.get(`${config.basePath}/health`, (_req, res) => {
-    res.status(200).json({
-      success: true,
-      message: 'MCPHub is running',
-      timestamp: new Date().toISOString(),
-    });
-  });
+  // Health check endpoints (no auth required for Kubernetes probes)
+  app.get(`${config.basePath}/health`, getHealth);
+  app.get(`${config.basePath}/health/detailed`, getDetailedHealth);
+  app.get(`${config.basePath}/health/cluster`, getClusterStatus);
 
   app.use(`${config.basePath}/api`, router);
 };
