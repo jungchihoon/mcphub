@@ -126,10 +126,11 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 # 3000번 포트로 웹 대시보드 및 MCP 엔드포인트 서비스 제공
 EXPOSE 3000
 
-# 컨테이너 헬스체크 설정
+# 컨테이너 헬스체크 설정 (클러스터 모드 대응)
 # /health 엔드포인트를 통해 MCPHub 서비스 상태 모니터링
-# 30초마다 체크, 10초 타임아웃, 5초 시작 지연, 3회 재시도
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+# 클러스터 모드에서는 초기화 시간이 더 오래 걸릴 수 있으므로 시작 지연 시간 증가
+# 30초마다 체크, 10초 타임아웃, 90초 시작 지연, 3회 재시도
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
   CMD curl -f http://localhost:3000/health || exit 1
 
 # 컨테이너 실행 설정

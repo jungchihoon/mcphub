@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcphub-config
+  namespace: mcphub
+  labels:
+    app: mcphub
+data:
+  # 애플리케이션 설정
+  NODE_ENV: "production"
+  PORT: "3000"
+  LOG_LEVEL: "info"
+  LOG_FORMAT: "json"
+  
+  # 클러스터 모드 설정
+  CLUSTER_MODE: "true"
+  WORKER_PROCESSES: "0"  # 0 = auto (CPU 코어 수만큼)
+  GC_OPTIMIZE: "true"
+  WORKER_RESTART_DELAY: "5000"
+  WORKER_MAX_RESTARTS: "5"
+  
+  # Redis 설정
+  REDIS_ENABLED: "true"
+  REDIS_KEY_PREFIX: "mcphub:"
+  REDIS_TTL: "3600"
+  
+  # MCP 서버 설정
+  INIT_TIMEOUT: "300000"
+  REQUEST_TIMEOUT: "60000"
+  
+  # 보안 설정
+  JWT_EXPIRES_IN: "24h"
+  BCRYPT_ROUNDS: "12"
+  
+  # 기타 설정
+  BASE_PATH: ""
+  
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcphub-mcp-settings
+  namespace: mcphub
+  labels:
+    app: mcphub
+data:
+  mcp_settings.json: |
+    {
+      "mcpServers": {
+        "fetch": {
+          "command": "uvx",
+          "args": ["mcp-server-fetch"],
+          "env": {}
+        },
+        "playwright": {
+          "command": "npx",
+          "args": ["@playwright/mcp@latest", "--headless"],
+          "timeout": 60000
+        }
+      },
+      "users": [
+        {
+          "username": "admin",
+          "password": "$2b$12$placeholder.password.hash.for.k8s",
+          "isAdmin": true
+        }
+      ],
+      "systemConfig": {
+        "routing": {
+          "enableGlobalRoute": true,
+          "enableGroupNameRoute": true
+        },
+        "install": {
+          "pythonIndexUrl": "",
+          "npmRegistry": ""
+        }
+      }
+    } 
