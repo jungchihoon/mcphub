@@ -7,7 +7,7 @@
         "firecrawl-mcp"
       ],
       "env": {
-        "FIRECRAWL_API_KEY": "fc-89c11d9ad6ab4636bbfdfff9731d0972"
+        "FIRECRAWL_API_KEY": "YOUR_FIRECRAWL_API_KEY_HERE"
       }
     },
     "Sequential Thinking Tools": {
@@ -62,7 +62,7 @@
   "systemConfig": {
     "smartRouting": {
       "enabled": true,
-      "openaiApiKey": "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",
+      "openaiApiKey": "YOUR_OPENAI_API_KEY_HERE",
       "openaiApiBaseUrl": "https://api.openai.com/v1",
       "openaiApiEmbeddingModel": "text-embedding-3-small",
       "dbUrl": "postgresql://localhost:5432/mcphub"
