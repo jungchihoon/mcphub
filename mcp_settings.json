@@ -58,5 +58,14 @@
       "password": "$2b$10$Vt7krIvjNgyN67LXqly0uOcTpN0LI55cYRbcKC71pUDAP0nJ7RPa.",
       "isAdmin": true
     }
-  ]
+  ],
+  "systemConfig": {
+    "smartRouting": {
+      "enabled": true,
+      "openaiApiKey": "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",
+      "openaiApiBaseUrl": "https://api.openai.com/v1",
+      "openaiApiEmbeddingModel": "text-embedding-3-small",
+      "dbUrl": "postgresql://localhost:5432/mcphub"
+    }
+  }
 }
