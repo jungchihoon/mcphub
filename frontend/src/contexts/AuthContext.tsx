@@ -30,11 +30,13 @@ const AuthContext = createContext<{
   login: (username: string, password: string) => Promise<boolean>;  // 로그인 함수
   register: (username: string, password: string, isAdmin?: boolean) => Promise<boolean>;  // 회원가입 함수
   logout: () => void;  // 로그아웃 함수
+  handleGitHubCallback: (token: string) => Promise<boolean>;  // GitHub OAuth 콜백 처리
 }>({
   auth: initialState,
   login: async () => false,
   register: async () => false,
   logout: () => { },
+  handleGitHubCallback: async () => false,
 });
 
 /**
@@ -211,6 +213,61 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   /**
+   * GitHub OAuth 콜백 처리 함수
+   * 
+   * GitHub OAuth에서 받은 토큰을 처리하고 인증 상태를 업데이트합니다.
+   * 
+   * @param token - GitHub OAuth에서 받은 JWT 토큰
+   * @returns Promise<boolean> - 인증 성공 여부
+   */
+  const handleGitHubCallback = async (token: string): Promise<boolean> => {
+    console.log('🔐 handleGitHubCallback called with token:', token ? 'Token exists' : 'No token');
+    try {
+      // 토큰을 저장
+      console.log('💾 Saving token to localStorage...');
+      authService.setToken(token);
+      console.log('✅ Token saved successfully');
+      
+      // 사용자 정보 가져오기
+      console.log('👤 Fetching user info...');
+      const response = await authService.getCurrentUser();
+
+      console.log('📋 User info response:', response);
+      
+      if (response.success && response.user) {
+        // 인증 성공 - 인증 상태 업데이트
+        console.log('✅ Authentication successful, updating auth state');
+        setAuth({
+          isAuthenticated: true,
+          loading: false,
+          user: response.user,
+          error: null,
+        });
+        return true;
+      } else {
+        // 인증 실패 - 토큰 제거
+        console.log('❌ Authentication failed:', response.message);
+        authService.removeToken();
+        setAuth({
+          ...initialState,
+          loading: false,
+          error: response.message || 'GitHub authentication failed',
+        });
+        return false;
+      }
+    } catch (error) {
+      // 예외 발생 - 토큰 제거
+      authService.removeToken();
+      setAuth({
+        ...initialState,
+        loading: false,
+        error: 'GitHub authentication failed',
+      });
+      return false;
+    }
+  };
+
+  /**
    * 로그아웃 함수
    * 
    * 현재 사용자를 로그아웃시키고 인증 상태를 초기화합니다.
@@ -225,7 +282,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // 컨텍스트 제공자로 하위 컴포넌트들에게 인증 관련 값들을 제공
   return (
-    <AuthContext.Provider value={{ auth, login, register, logout }}>
+    <AuthContext.Provider value={{ auth, login, register, logout, handleGitHubCallback }}>
       {children}
     </AuthContext.Provider>
   );

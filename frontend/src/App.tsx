@@ -34,6 +34,40 @@ import LogsPage from './pages/LogsPage';
 // 유틸리티 함수: 기본 경로를 가져오는 함수
 import { getBasePath } from './utils/runtime';
 
+import { useEffect } from 'react';
+import { useAuth } from './contexts/AuthContext';
+
+/**
+ * OAuth 콜백 처리 컴포넌트
+ * 
+ * GitHub OAuth에서 리다이렉트된 후 토큰을 처리하고 메인 페이지로 리다이렉트합니다.
+ */
+const OAuthCallbackHandler: React.FC = () => {
+  const { handleGitHubCallback } = useAuth();
+
+  useEffect(() => {
+    // URL에서 토큰 확인 (OAuth 콜백 처리)
+    console.log('🌐 OAuthCallbackHandler useEffect - checking for token in URL');
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    console.log('🔍 Token found in URL:', token ? 'Yes' : 'No');
+    
+    if (token) {
+      console.log('🚀 Calling handleGitHubCallback...');
+      handleGitHubCallback(token).then((success) => {
+        console.log('📊 handleGitHubCallback result:', success);
+        if (success) {
+          // 성공 시 메인 페이지로 리다이렉트
+          console.log('✅ Redirecting to main page...');
+          window.location.href = '/';
+        }
+      });
+    }
+  }, [handleGitHubCallback]);
+
+  return null; // 이 컴포넌트는 UI를 렌더링하지 않음
+};
+
 /**
  * App 컴포넌트: 애플리케이션의 메인 컴포넌트
  * 
@@ -51,6 +85,9 @@ function App() {
     <ThemeProvider>
       {/* AuthProvider: 로그인 상태, 사용자 정보 관리 */}
       <AuthProvider>
+        {/* OAuth 콜백 처리 컴포넌트 */}
+        <OAuthCallbackHandler />
+        
         {/* ToastProvider: 성공/오류 메시지 표시 기능 */}
         <ToastProvider>
           {/* Router: URL 기반 페이지 이동 관리 */}

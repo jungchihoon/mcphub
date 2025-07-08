@@ -34,7 +34,11 @@ export const getToken = (): string | null => {
  * @param token - 저장할 토큰 문자열
  */
 export const setToken = (token: string): void => {
+  console.log('🔑 setToken called with token:', token ? 'Token exists' : 'No token');
+  console.log('🔑 TOKEN_KEY:', TOKEN_KEY);
   localStorage.setItem(TOKEN_KEY, token);
+  console.log('💾 Token saved to localStorage');
+  console.log('🔍 localStorage check:', localStorage.getItem(TOKEN_KEY) ? 'Token found' : 'Token not found');
 };
 
 /**
@@ -214,4 +218,25 @@ export const changePassword = async (
  */
 export const logout = (): void => {
   removeToken();
+};
+
+
+// GitHub OAuth 관련 함수 추가
+export const initiateGitHubAuth = () => {
+  // 백엔드 GitHub OAuth 엔드포인트로 리다이렉트
+  window.location.href = `${getApiUrl('/auth/github')}`;
+};
+
+export const handleGitHubCallback = async (token: string) => {
+  try {
+    // 토큰을 로컬 스토리지에 저장 (올바른 키 사용)
+    setToken(token);
+    
+    // 사용자 정보 가져오기
+    const user = await getCurrentUser();
+    return { success: true, user };
+  } catch (error) {
+    console.error('GitHub callback error:', error);
+    return { success: false, error };
+  }
 };

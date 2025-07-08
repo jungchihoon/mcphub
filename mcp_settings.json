@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-     "firecrawl-mcp": {
+    "firecrawl-mcp": {
       "command": "npx",
       "args": [
         "-y",
@@ -57,6 +57,11 @@
       "username": "admin",
       "password": "$2b$10$Vt7krIvjNgyN67LXqly0uOcTpN0LI55cYRbcKC71pUDAP0nJ7RPa.",
       "isAdmin": true
+    },
+    {
+      "username": "github_kksshh0612",
+      "password": "$2b$10$bH8sR6Zg4YJYfe7A9WT9pu5Vcmc8TdUFxs86MHjycxxxCyTyL19uu",
+      "isAdmin": false
     }
   ]
 }
