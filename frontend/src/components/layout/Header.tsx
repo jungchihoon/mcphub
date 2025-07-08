@@ -20,12 +20,6 @@ import React, { useState } from 'react';
 // useTranslation: 번역 함수와 현재 언어 정보를 제공하는 훅
 import { useTranslation } from 'react-i18next';
 import ThemeSwitch from '@/components/ui/ThemeSwitch';
-import GitHubIcon from '@/components/icons/GitHubIcon';
-import SponsorIcon from '@/components/icons/SponsorIcon';
-import WeChatIcon from '@/components/icons/WeChatIcon';
-import DiscordIcon from '@/components/icons/DiscordIcon';
-import SponsorDialog from '@/components/ui/SponsorDialog';
-import WeChatDialog from '@/components/ui/WeChatDialog';
 
 /**
  * Header 컴포넌트의 Props 인터페이스
@@ -88,63 +82,17 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
         {/* 테마 스위치 및 버전 정보 */}
         <div className="flex items-center space-x-4">
           {/* 버전 정보 표시 */}
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          {/* <span className="text-sm text-gray-500 dark:text-gray-400">
             {import.meta.env.PACKAGE_VERSION === 'dev'
               ? import.meta.env.PACKAGE_VERSION
               : `v${import.meta.env.PACKAGE_VERSION}`}
-          </span>
-          
-          {/* GitHub 링크 */}
-          <a
-            href="https://github.com/samanhappy/mcphub"
-            target="_blank"  // 새 탭에서 열기
-            rel="noopener noreferrer"  // 보안을 위한 속성
-            className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-            aria-label="GitHub Repository"
-          >
-            <GitHubIcon className="h-5 w-5" />
-          </a>
-          
-          {/* 언어별 소셜 링크 */}
-          {i18n.language === 'zh' ? (
-            // 중국어인 경우 WeChat 버튼 표시
-            <button
-              onClick={() => setWechatDialogOpen(true)}
-              className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 focus:outline-none"
-              aria-label={t('wechat.label')}
-            >
-              <WeChatIcon className="h-5 w-5" />
-            </button>
-          ) : (
-            // 그 외 언어인 경우 Discord 링크 표시
-            <a
-              href="https://discord.gg/qMKNsn5Q"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-              aria-label={t('discord.label')}
-            >
-              <DiscordIcon className="h-5 w-5" />
-            </a>
-          )}
-          
-          {/* 후원 버튼 */}
-          <button
-            onClick={() => setSponsorDialogOpen(true)}
-            className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 focus:outline-none"
-            aria-label={t('sponsor.label')}
-          >
-            <SponsorIcon className="h-5 w-5" />
-          </button>
+          </span> */}
           
           {/* 테마 스위치 */}
           <ThemeSwitch />
         </div>
       </div>
-      
-      {/* 다이얼로그 컴포넌트들 */}
-      <SponsorDialog open={sponsorDialogOpen} onOpenChange={setSponsorDialogOpen} />
-      <WeChatDialog open={wechatDialogOpen} onOpenChange={setWechatDialogOpen} />
+     
     </header>
   );
 };

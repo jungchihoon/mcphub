@@ -1,35 +1,24 @@
-// React 라이브러리를 가져옵니다
+// MCPHub 대시보드 페이지
+// 이 페이지는 서버 통계(전체/온라인/오프라인/연결중), 최근 서버 목록 등 MCPHub의 대시보드 정보를 제공합니다.
 import React from 'react';
-
-// 다국어 지원을 위한 react-i18next 훅을 가져옵니다
 import { useTranslation } from 'react-i18next';
-
-// 서버 데이터 관리를 위한 커스텀 훅을 가져옵니다
 import { useServerData } from '@/hooks/useServerData';
 
 /**
- * 대시보드 페이지 컴포넌트
- * 
- * 이 컴포넌트는 애플리케이션의 메인 대시보드를 표시합니다.
- * 서버들의 통계 정보와 최근 활동을 한눈에 볼 수 있도록 제공합니다.
- * 
- * 주요 기능:
- * - 서버 상태별 통계 카드 (전체, 온라인, 오프라인, 연결 중)
+ * DashboardPage 컴포넌트: MCPHub 대시보드 메인 페이지
+ * - 서버 상태별 통계(전체, 온라인, 오프라인, 연결중) 카드
  * - 최근 서버 목록 테이블
- * - 로딩 상태 및 오류 처리
+ * - 로딩/에러/빈 상태 처리
  */
 const DashboardPage: React.FC = () => {
-  // 다국어 지원 훅 사용
+  // 다국어 번역 훅
   const { t } = useTranslation();
-  
-  // 서버 데이터 관리 훅에서 필요한 값들을 가져옵니다
+  // 서버 데이터 및 관련 함수들을 커스텀 훅에서 가져옴
   const { servers, error, setError, isLoading } = useServerData();
 
   /**
    * 서버 통계 계산
-   * 
-   * 서버 목록을 분석하여 각 상태별 서버 수를 계산합니다.
-   * 이 통계는 대시보드 상단의 카드들에 표시됩니다.
+   * - 전체, 온라인, 오프라인, 연결중 서버 수를 계산하여 카드에 표시
    */
   const serverStats = {
     total: servers.length,                                    // 전체 서버 수
@@ -40,21 +29,21 @@ const DashboardPage: React.FC = () => {
 
   /**
    * 서버 상태를 번역 키로 매핑
-   * 
-   * 서버의 상태값을 다국어 지원을 위한 번역 키로 변환합니다.
+   * - 서버 상태값을 다국어 지원을 위한 번역 키로 변환
    */
   const statusTranslations = {
     connected: 'status.online',      // 연결됨 → 온라인
     disconnected: 'status.offline',  // 연결 끊김 → 오프라인
     connecting: 'status.connecting'  // 연결 중
-  }
+  };
 
+  // 실제 렌더링 영역
   return (
     <div>
-      {/* 페이지 제목 */}
+      {/* 상단: 페이지 제목 */}
       <h1 className="text-2xl font-bold text-gray-900 mb-8">{t('pages.dashboard.title')}</h1>
 
-      {/* 오류 메시지 표시 */}
+      {/* 에러 메시지 표시 영역 */}
       {error && (
         <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded shadow-sm error-box">
           <div className="flex items-center justify-between">
@@ -62,7 +51,7 @@ const DashboardPage: React.FC = () => {
               <h3 className="text-status-red text-lg font-medium">{t('app.error')}</h3>
               <p className="text-gray-600 mt-1">{error}</p>
             </div>
-            {/* 오류 메시지 닫기 버튼 */}
+            {/* 에러 닫기 버튼 */}
             <button
               onClick={() => setError(null)}
               className="ml-4 text-gray-500 hover:text-gray-700 transition-colors duration-200"

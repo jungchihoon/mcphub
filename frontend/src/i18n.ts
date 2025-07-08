@@ -13,7 +13,6 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 // 번역 파일들을 가져옵니다
 // 각 언어별로 JSON 파일에 번역 키와 값들이 저장되어 있습니다
 import enTranslation from './locales/en.json';  // 영어 번역
-import zhTranslation from './locales/zh.json';  // 중국어 번역
 
 /**
  * i18n 설정 및 초기화
@@ -37,9 +36,6 @@ i18n
     resources: {
       en: {
         translation: enTranslation  // 영어 번역 데이터
-      },
-      zh: {
-        translation: zhTranslation  // 중국어 번역 데이터
       }
     },
     

@@ -615,7 +615,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schema, onSubmit, onCancel, l
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {t('tool.jsonConfiguration')}
-              </label>
+            </label>
               <textarea
                 value={jsonText}
                 onChange={(e) => handleJsonTextChange(e.target.value)}
@@ -636,19 +636,19 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schema, onSubmit, onCancel, l
               </button>
               <button
                 onClick={() => {
-                  try {
+                try {
                     const parsedJson = JSON.parse(jsonText);
                     onSubmit(parsedJson);
                   } catch (error) {
                     setJsonError(t('tool.invalidJsonFormat'));
-                  }
-                }}
+                }
+              }}
                 disabled={loading || !!jsonError}
                 className="px-4 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 text-sm btn-primary"
               >
                 {loading ? t('tool.running') : t('tool.runTool')}
               </button>
-            </div>
+          </div>
           </div>
         ) : (
           /* Form Mode */
@@ -672,7 +672,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schema, onSubmit, onCancel, l
               >
                 {loading ? t('tool.running') : t('tool.runTool')}
               </button>
-            </div>
+          </div>
           </form>
         )}
       </div>
