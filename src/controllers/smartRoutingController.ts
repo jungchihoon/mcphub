@@ -52,6 +52,10 @@ interface SearchFeedback {
  * @param res Express 응답 객체
  */
 export const getSmartRoutingStatus = async (req: Request, res: Response) => {
+  // CORS 헤더 추가
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   try {
     const config = getSmartRoutingConfig();
     

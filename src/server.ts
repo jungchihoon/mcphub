@@ -62,11 +62,11 @@ export class AppServer {
       // 사용자가 없는 경우 기본 관리자 사용자 생성
       await initializeDefaultUser();
 
+      // API 라우터 초기화 (미들웨어보다 먼저 Smart Routing 라우트 설정)
+      initRoutes(this.app);
+      
       // Express 미들웨어 초기화 (CORS, 바디 파서 등)
       initMiddlewares(this.app);
-      
-      // API 라우터 초기화
-      initRoutes(this.app);
       console.log('Server initialized successfully');
 
       // MCP 서버들 초기화 및 연결

@@ -50,6 +50,39 @@ import { auth } from '../middlewares/auth.js';
 const router = express.Router();
 
 export const initRoutes = (app: express.Application): void => {
+  // Smart Routing routes (without auth) - with JSON parsing middleware
+  app.get(`${config.basePath}/api/smart-routing/status`, getSmartRoutingStatus);
+  
+  // 간단한 테스트 엔드포인트 추가 (인증 없음)
+  app.get(`${config.basePath}/api/test`, (_req, res) => {
+    res.json({ success: true, message: 'Test endpoint working', timestamp: new Date().toISOString() });
+  });
+  
+  app.post(`${config.basePath}/api/smart-routing/search`, 
+    express.json(), // JSON 파싱 미들웨어 직접 추가
+    [
+      check('query', 'Query is required').not().isEmpty(),
+      check('limit', 'Limit must be a positive integer').optional().isInt({ min: 1, max: 50 }),
+      check('threshold', 'Threshold must be between 0.1 and 1.0').optional().isFloat({ min: 0.1, max: 1.0 })
+    ], 
+    searchTools
+  );
+  
+  app.post(`${config.basePath}/api/smart-routing/reindex`, express.json(), reindexTools);
+  app.post(`${config.basePath}/api/smart-routing/reindex/:serverName`, express.json(), reindexServerTools);
+  app.get(`${config.basePath}/api/smart-routing/stats`, getSmartRoutingStats);
+  app.post(`${config.basePath}/api/smart-routing/feedback`, 
+    express.json(), // JSON 파싱 미들웨어 직접 추가
+    [
+      check('queryId', 'Query ID is required').not().isEmpty(),
+      check('toolName', 'Tool name is required').not().isEmpty(),
+      check('serverName', 'Server name is required').not().isEmpty(),
+      check('rating', 'Rating must be between 1 and 5').isInt({ min: 1, max: 5 }),
+      check('successful', 'Successful flag is required').isBoolean()
+    ], 
+    submitSearchFeedback
+  );
+
   // API routes protected by auth middleware in middlewares/index.ts
   router.get('/servers', getAllServers);
   router.get('/settings', getAllSettings);
@@ -93,23 +126,7 @@ export const initRoutes = (app: express.Application): void => {
   router.delete('/logs', clearLogs);
   router.get('/logs/stream', streamLogs);
 
-  // Smart Routing routes (temporarily without auth for testing) - before auth middleware
-  app.get(`${config.basePath}/smart-routing/status`, getSmartRoutingStatus);
-  app.post(`${config.basePath}/smart-routing/search`, [
-    check('query', 'Query is required').not().isEmpty(),
-    check('limit', 'Limit must be a positive integer').optional().isInt({ min: 1, max: 50 }),
-    check('threshold', 'Threshold must be between 0.1 and 1.0').optional().isFloat({ min: 0.1, max: 1.0 })
-  ], searchTools);
-  app.post(`${config.basePath}/smart-routing/reindex`, reindexTools);
-  app.post(`${config.basePath}/smart-routing/reindex/:serverName`, reindexServerTools);
-  app.get(`${config.basePath}/smart-routing/stats`, getSmartRoutingStats);
-  app.post(`${config.basePath}/smart-routing/feedback`, [
-    check('queryId', 'Query ID is required').not().isEmpty(),
-    check('toolName', 'Tool name is required').not().isEmpty(),
-    check('serverName', 'Server name is required').not().isEmpty(),
-    check('rating', 'Rating must be between 1 and 5').isInt({ min: 1, max: 5 }),
-    check('successful', 'Successful flag is required').isBoolean()
-  ], submitSearchFeedback);
+
 
   // Auth routes - move to router instead of app directly
   router.post(
