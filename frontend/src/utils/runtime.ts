@@ -31,10 +31,11 @@ import type { RuntimeConfig } from '../types/runtime';
  */
 export const getRuntimeConfig = (): RuntimeConfig => {
   return (
+    // 윈도우 객체에 저장된 설정이 있으면 사용하고, 없으면 기본값 사용
     window.__MCPHUB_CONFIG__ || {
-      basePath: '',
-      version: 'dev',
-      name: 'mcphub',
+      basePath: '',      // 기본 경로 (예: /app, /mcphub)
+      version: 'dev',    // 애플리케이션 버전
+      name: 'mcphub',    // 애플리케이션 이름
     }
   );
 };
@@ -139,6 +140,8 @@ export const loadRuntimeConfig = async (): Promise<RuntimeConfig> => {
     // 초기 설정 로드를 위해 현재 위치를 기반으로 올바른 경로 결정
     // 현재 위치에 따라 다양한 가능한 경로 시도
     const currentPath = window.location.pathname;
+    
+    // 시도할 수 있는 설정 경로들
     const possibleConfigPaths = [
       // 이미 하위 경로에 있는 경우, 해당 경로 사용 시도
       currentPath.replace(/\/[^/]*$/, '') + '/config',
@@ -157,10 +160,11 @@ export const loadRuntimeConfig = async (): Promise<RuntimeConfig> => {
           method: 'GET',
           headers: {
             Accept: 'application/json',
-            'Cache-Control': 'no-cache',
+            'Cache-Control': 'no-cache',  // 캐시하지 않음
           },
         });
 
+        // 성공적으로 응답을 받았고 데이터가 있으면 반환
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.data) {
@@ -181,6 +185,7 @@ export const loadRuntimeConfig = async (): Promise<RuntimeConfig> => {
       name: 'mcphub',
     };
   } catch (error) {
+    // 예상치 못한 오류가 발생한 경우에도 기본 설정으로 폴백
     console.error('Error loading runtime config:', error);
     return {
       basePath: '',

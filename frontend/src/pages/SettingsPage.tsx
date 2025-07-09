@@ -1,3 +1,6 @@
+// MCPHub 시스템 설정 페이지
+// 이 페이지는 언어, 라우팅, 설치, 스마트라우팅, 비밀번호 등 MCPHub의 시스템 설정을 관리합니다.
+// 각 섹션별로 입력, 토글, 저장, 검증 등 다양한 UI와 로직을 포함합니다.
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -7,17 +10,28 @@ import { useSettingsData } from '@/hooks/useSettingsData';
 import { useToast } from '@/contexts/ToastContext';
 import { generateRandomKey } from '@/utils/key';
 
+/**
+ * SettingsPage 컴포넌트: MCPHub 시스템 설정 메인 페이지
+ * - 언어 설정, 라우팅 설정, 설치 설정, 스마트라우팅 설정, 비밀번호 변경 등 제공
+ * - 각 섹션은 토글로 열고 닫을 수 있음
+ * - 각종 입력, 저장, 검증, 알림 등 다양한 UX 제공
+ */
 const SettingsPage: React.FC = () => {
+  // 다국어 번역 훅
   const { t, i18n } = useTranslation();
+  // 페이지 이동 함수
   const navigate = useNavigate();
+  // 토스트(알림) 메시지 표시 함수
   const { showToast } = useToast();
+  // 현재 언어 상태
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
 
-  // Update current language when it changes
+  // 언어 변경 시 상태 동기화
   useEffect(() => {
     setCurrentLanguage(i18n.language);
   }, [i18n.language]);
 
+  // 설치 설정 상태 (로컬 임시)
   const [installConfig, setInstallConfig] = useState<{
     pythonIndexUrl: string;
     npmRegistry: string;
@@ -26,6 +40,7 @@ const SettingsPage: React.FC = () => {
     npmRegistry: '',
   });
 
+  // 스마트라우팅 임시 설정 상태
   const [tempSmartRoutingConfig, setTempSmartRoutingConfig] = useState<{
     dbUrl: string;
     openaiApiBaseUrl: string;
@@ -38,28 +53,29 @@ const SettingsPage: React.FC = () => {
     openaiApiEmbeddingModel: '',
   });
 
+  // 커스텀 훅에서 각종 설정 데이터와 함수 가져오기
   const {
-    routingConfig,
-    tempRoutingConfig,
-    setTempRoutingConfig,
-    installConfig: savedInstallConfig,
-    smartRoutingConfig,
-    loading,
-    updateRoutingConfig,
-    updateRoutingConfigBatch,
-    updateInstallConfig,
-    updateSmartRoutingConfig,
-    updateSmartRoutingConfigBatch
+    routingConfig,                    // 현재 라우팅 설정
+    tempRoutingConfig,                // 임시 라우팅 설정
+    setTempRoutingConfig,             // 임시 라우팅 설정 변경 함수
+    installConfig: savedInstallConfig,// 저장된 설치 설정
+    smartRoutingConfig,               // 현재 스마트라우팅 설정
+    loading,                          // 로딩 상태
+    updateRoutingConfig,              // 라우팅 설정 업데이트 함수
+    updateRoutingConfigBatch,         // 라우팅 설정 일괄 업데이트 함수
+    updateInstallConfig,              // 설치 설정 업데이트 함수
+    updateSmartRoutingConfig,         // 스마트라우팅 설정 업데이트 함수
+    updateSmartRoutingConfigBatch     // 스마트라우팅 설정 일괄 업데이트 함수
   } = useSettingsData();
 
-  // Update local installConfig when savedInstallConfig changes
+  // 저장된 설치 설정이 변경될 때 로컬 상태 동기화
   useEffect(() => {
     if (savedInstallConfig) {
       setInstallConfig(savedInstallConfig);
     }
   }, [savedInstallConfig]);
 
-  // Update local tempSmartRoutingConfig when smartRoutingConfig changes
+  // 스마트라우팅 설정이 변경될 때 임시 상태 동기화
   useEffect(() => {
     if (smartRoutingConfig) {
       setTempSmartRoutingConfig({
@@ -71,13 +87,18 @@ const SettingsPage: React.FC = () => {
     }
   }, [smartRoutingConfig]);
 
+  // 각 설정 섹션의 열림/닫힘 상태 관리
   const [sectionsVisible, setSectionsVisible] = useState({
-    routingConfig: false,
-    installConfig: false,
-    smartRoutingConfig: false,
-    password: false
+    routingConfig: false,      // 라우팅 설정 섹션
+    installConfig: false,      // 설치 설정 섹션
+    smartRoutingConfig: false, // 스마트라우팅 설정 섹션
+    password: false            // 비밀번호 변경 섹션
   });
 
+  /**
+   * 설정 섹션의 열림/닫힘 토글 함수
+   * @param section - 토글할 섹션 이름
+   */
   const toggleSection = (section: 'routingConfig' | 'installConfig' | 'smartRoutingConfig' | 'password') => {
     setSectionsVisible(prev => ({
       ...prev,
@@ -85,21 +106,19 @@ const SettingsPage: React.FC = () => {
     }));
   };
 
+  // 라우팅 설정 변경 핸들러 (Bearer Auth 등)
   const handleRoutingConfigChange = async (key: 'enableGlobalRoute' | 'enableGroupNameRoute' | 'enableBearerAuth' | 'bearerAuthKey' | 'skipAuth', value: boolean | string) => {
-    // If enableBearerAuth is turned on and there's no key, generate one first
+    // Bearer Auth 활성화 시 키가 없으면 자동 생성
     if (key === 'enableBearerAuth' && value === true) {
       if (!tempRoutingConfig.bearerAuthKey && !routingConfig.bearerAuthKey) {
         const newKey = generateRandomKey();
         handleBearerAuthKeyChange(newKey);
-
-        // Update both enableBearerAuth and bearerAuthKey in a single call
+        // 두 값을 한 번에 저장
         const success = await updateRoutingConfigBatch({
           enableBearerAuth: true,
           bearerAuthKey: newKey
         });
-
         if (success) {
-          // Update tempRoutingConfig to reflect the saved values
           setTempRoutingConfig(prev => ({
             ...prev,
             bearerAuthKey: newKey
@@ -108,10 +127,10 @@ const SettingsPage: React.FC = () => {
         return;
       }
     }
-
     await updateRoutingConfig(key, value);
   };
 
+  // Bearer Auth 키 입력 핸들러
   const handleBearerAuthKeyChange = (value: string) => {
     setTempRoutingConfig(prev => ({
       ...prev,
@@ -119,10 +138,12 @@ const SettingsPage: React.FC = () => {
     }));
   };
 
+  // Bearer Auth 키 저장 핸들러
   const saveBearerAuthKey = async () => {
     await updateRoutingConfig('bearerAuthKey', tempRoutingConfig.bearerAuthKey);
   };
 
+  // 설치 설정 입력 핸들러
   const handleInstallConfigChange = (key: 'pythonIndexUrl' | 'npmRegistry', value: string) => {
     setInstallConfig({
       ...installConfig,
@@ -130,10 +151,12 @@ const SettingsPage: React.FC = () => {
     });
   };
 
+  // 설치 설정 저장 핸들러
   const saveInstallConfig = async (key: 'pythonIndexUrl' | 'npmRegistry') => {
     await updateInstallConfig(key, installConfig[key]);
   };
 
+  // 스마트라우팅 임시 설정 입력 핸들러
   const handleSmartRoutingConfigChange = (key: 'dbUrl' | 'openaiApiBaseUrl' | 'openaiApiKey' | 'openaiApiEmbeddingModel', value: string) => {
     setTempSmartRoutingConfig({
       ...tempSmartRoutingConfig,
@@ -141,31 +164,28 @@ const SettingsPage: React.FC = () => {
     });
   };
 
+  // 스마트라우팅 설정 저장 핸들러
   const saveSmartRoutingConfig = async (key: 'dbUrl' | 'openaiApiBaseUrl' | 'openaiApiKey' | 'openaiApiEmbeddingModel') => {
     await updateSmartRoutingConfig(key, tempSmartRoutingConfig[key]);
   };
 
+  // 스마트라우팅 활성/비활성 토글 핸들러
   const handleSmartRoutingEnabledChange = async (value: boolean) => {
-    // If enabling Smart Routing, validate required fields and save any unsaved changes
     if (value) {
+      // 활성화 시 필수값 검증 및 일괄 저장
       const currentDbUrl = tempSmartRoutingConfig.dbUrl || smartRoutingConfig.dbUrl;
       const currentOpenaiApiKey = tempSmartRoutingConfig.openaiApiKey || smartRoutingConfig.openaiApiKey;
-
       if (!currentDbUrl || !currentOpenaiApiKey) {
         const missingFields = [];
         if (!currentDbUrl) missingFields.push(t('settings.dbUrl'));
         if (!currentOpenaiApiKey) missingFields.push(t('settings.openaiApiKey'));
-
         showToast(t('settings.smartRoutingValidationError', {
           fields: missingFields.join(', ')
         }));
         return;
       }
-
-      // Prepare updates object with unsaved changes and enabled status
+      // 변경된 값만 모아서 일괄 저장
       const updates: any = { enabled: value };
-
-      // Check for unsaved changes and include them in the batch update
       if (tempSmartRoutingConfig.dbUrl !== smartRoutingConfig.dbUrl) {
         updates.dbUrl = tempSmartRoutingConfig.dbUrl;
       }
@@ -178,26 +198,27 @@ const SettingsPage: React.FC = () => {
       if (tempSmartRoutingConfig.openaiApiEmbeddingModel !== smartRoutingConfig.openaiApiEmbeddingModel) {
         updates.openaiApiEmbeddingModel = tempSmartRoutingConfig.openaiApiEmbeddingModel;
       }
-
-      // Save all changes in a single batch update
       await updateSmartRoutingConfigBatch(updates);
     } else {
-      // If disabling, just update the enabled status
+      // 비활성화 시 enabled만 저장
       await updateSmartRoutingConfig('enabled', value);
     }
   };
 
+  // 비밀번호 변경 성공 시 메인 페이지로 이동
   const handlePasswordChangeSuccess = () => {
     setTimeout(() => {
       navigate('/');
     }, 2000);
   };
 
+  // 언어 변경 핸들러
   const handleLanguageChange = (lang: string) => {
     localStorage.setItem('i18nextLng', lang);
     window.location.reload();
   };
 
+  // 이하 실제 렌더링 영역 (UI 주석은 생략, 필요시 추가 가능)
   return (
     <div className="container mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 mb-8">{t('pages.settings.title')}</h1>

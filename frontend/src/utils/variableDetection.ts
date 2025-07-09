@@ -37,7 +37,11 @@
  * ```
  */
 export const detectVariables = (payload: any): string[] => {
+  // 중복을 제거하기 위해 Set을 사용
   const variables = new Set<string>();
+  
+  // ${VARIABLE_NAME} 형태의 변수를 찾는 정규식
+  // ${} 안의 내용을 캡처 그룹으로 추출
   const variableRegex = /\$\{([^}]+)\}/g;
 
   /**
@@ -47,8 +51,9 @@ export const detectVariables = (payload: any): string[] => {
    */
   const checkString = (str: string) => {
     let match;
+    // 정규식으로 모든 매치를 찾아서 변수명을 Set에 추가
     while ((match = variableRegex.exec(str)) !== null) {
-      variables.add(match[1]);
+      variables.add(match[1]);  // 캡처 그룹의 내용 (변수명)
     }
   };
 
@@ -60,16 +65,22 @@ export const detectVariables = (payload: any): string[] => {
    */
   const checkObject = (obj: any, path: string = '') => {
     if (typeof obj === 'string') {
+      // 문자열인 경우 직접 변수 검사
       checkString(obj);
     } else if (Array.isArray(obj)) {
+      // 배열인 경우 각 요소를 재귀적으로 검사
       obj.forEach((item, index) => checkObject(item, `${path}[${index}]`));
     } else if (obj && typeof obj === 'object') {
+      // 객체인 경우 각 속성을 재귀적으로 검사
       Object.entries(obj).forEach(([key, value]) => {
         checkObject(value, path ? `${path}.${key}` : key);
       });
     }
   };
 
+  // 최상위 객체부터 검사 시작
   checkObject(payload);
+  
+  // Set을 배열로 변환하여 반환
   return Array.from(variables);
 };
