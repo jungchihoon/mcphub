@@ -12,8 +12,14 @@
  */
 
 import React from 'react';
+
+// React Router의 네비게이션 컴포넌트들을 가져옵니다
 import { Navigate, Outlet } from 'react-router-dom';
+
+// 다국어 지원을 위한 react-i18next 훅을 가져옵니다
 import { useTranslation } from 'react-i18next';
+
+// 인증 상태를 확인하기 위한 컨텍스트 훅을 가져옵니다
 import { useAuth } from '../contexts/AuthContext';
 
 /**
@@ -35,9 +41,12 @@ interface ProtectedRouteProps {
  * @returns {JSX.Element} 보호된 라우트 컴포넌트
  */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
-  redirectPath = '/login'
+  redirectPath = '/login'  // 기본값으로 로그인 페이지 설정
 }) => {
+  // 다국어 지원 훅 사용
   const { t } = useTranslation();
+  
+  // 인증 상태 가져오기
   const { auth } = useAuth();
 
   // 인증 상태 로딩 중일 때 로딩 화면 표시

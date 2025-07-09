@@ -67,7 +67,9 @@
     "changePasswordError": "Failed to change password",
     "changePassword": "Change Password",
     "passwordChanged": "Password changed successfully",
-    "passwordChangeError": "Failed to change password"
+    "passwordChangeError": "Failed to change password",
+    "or": "or",
+    "loginWithGitHub": "Login with GitHub"
   },
   "server": {
     "addServer": "Add Server",

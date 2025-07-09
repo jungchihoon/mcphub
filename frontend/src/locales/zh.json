@@ -67,7 +67,9 @@
     "changePasswordError": "修改密码失败",
     "changePassword": "修改密码",
     "passwordChanged": "密码修改成功",
-    "passwordChangeError": "修改密码失败"
+    "passwordChangeError": "修改密码失败",
+    "or": "或",
+    "loginWithGitHub": "使用 GitHub 登录"
   },
   "server": {
     "addServer": "添加服务器",

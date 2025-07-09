@@ -12,6 +12,9 @@
  */
 
 import { ClassValue, clsx } from 'clsx';
+
+// tailwind-merge: Tailwind CSS 클래스들을 중복 제거하고 충돌을 해결하는 라이브러리
+// 같은 속성의 클래스가 있을 때 마지막에 오는 클래스가 우선순위를 가집니다
 import { twMerge } from 'tailwind-merge';
 
 /**
@@ -40,5 +43,7 @@ import { twMerge } from 'tailwind-merge';
  * ```
  */
 export function cn(...inputs: ClassValue[]) {
+  // 1. clsx로 모든 클래스들을 결합 (조건부 클래스 처리)
+  // 2. twMerge로 Tailwind CSS 클래스 중복 제거 및 충돌 해결
   return twMerge(clsx(inputs));
 }

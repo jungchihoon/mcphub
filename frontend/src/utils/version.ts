@@ -36,13 +36,20 @@ const PACKAGE_NAME = '@samanhappy/mcphub';
  */
 export const checkLatestVersion = async (): Promise<string | null> => {
   try {
+    // NPM 레지스트리 API 엔드포인트 호출
+    // /latest 엔드포인트는 해당 패키지의 최신 버전 정보를 반환합니다
     const response = await fetch(`${NPM_REGISTRY}/${PACKAGE_NAME}/latest`);
+    
+    // HTTP 응답이 성공적이지 않으면 오류 발생
     if (!response.ok) {
       throw new Error(`Failed to fetch latest version: ${response.status}`);
     }
+    
+    // JSON 응답을 파싱하여 버전 정보 추출
     const data = await response.json();
     return data.version || null;
   } catch (error) {
+    // 네트워크 오류나 기타 예외 상황 처리
     console.error('Error checking for latest version:', error);
     return null;
   }
@@ -75,6 +82,7 @@ export const compareVersions = (current: string, latest: string): number => {
 
   // 주요, 부 버전, 패치 버전을 순서대로 비교
   for (let i = 0; i < 3; i++) {
+    // 각 부분이 없으면 0으로 처리 (예: '1.2' → [1, 2, 0])
     const currentPart = currentParts[i] || 0;
     const latestPart = latestParts[i] || 0;
 

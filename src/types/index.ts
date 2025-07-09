@@ -10,6 +10,8 @@ export interface IUser {
   username: string;
   password: string;
   isAdmin?: boolean;
+  email?: string;
+  githubId?: string;
 }
 
 // Group interface for server grouping

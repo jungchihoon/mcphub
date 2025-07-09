@@ -123,12 +123,12 @@ export const useSettingsData = () => {
     } catch (error) {
       console.error('Failed to fetch settings:', error);
       setError(error instanceof Error ? error.message : 'Failed to fetch settings');
-      // 使用一个稳定的 showToast 引用，避免将其加入依赖数组
+      // 안정적인 showToast 참조 사용, 의존성 배열에 추가하지 않음
       showToast(t('errors.failedToFetchSettings'));
     } finally {
       setLoading(false);
     }
-  }, [t]); // 移除 showToast 依赖
+  }, [t]); // showToast 의존성 제거
 
   // Update routing configuration
   const updateRoutingConfig = async <T extends keyof RoutingConfig>(
