@@ -270,7 +270,6 @@ export const handleGitHubCallback = async (req: Request, res: Response): Promise
     const { code } = req.query;
     const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
     const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
-    const GITHUB_CALLBACK_URL = process.env.GITHUB_CALLBACK_URL || 'http://localhost:3000/api/auth/github/callback';
 
     if (!code || !GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
       res.status(400).json({ success: false, message: 'Missing required parameters' });
@@ -374,13 +373,13 @@ export const handleGitHubCallback = async (req: Request, res: Response): Promise
 
         // 프론트엔드로 리다이렉트 (토큰 포함)
         // 보안: 토큰을 URL 파라미터로 전달 (HTTPS 환경에서는 안전)
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
         res.redirect(`${frontendUrl}/?token=${token}&username=${user.username}`);
       }
     );
   } catch (error) {
     console.error('GitHub OAuth callback error:', error);
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     res.redirect(`${frontendUrl}/login?error=Authentication failed`);
   }
 };
