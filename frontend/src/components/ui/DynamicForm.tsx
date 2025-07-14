@@ -593,171 +593,88 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schema, onSubmit, onCancel, l
             <button
               type="button"
               onClick={switchToFormMode}
-    }    // Handle object type
-    if (propSchema.type === 'object') {
-      if (propSchema.properties) {
-        // Object with defined properties - render as nested form
-        return (
-          <div key={fullPath} className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {key}
-              {(path ? getNestedValue(jsonSchema, path)?.required?.includes(key) : jsonSchema.required?.includes(key)) && <span className="text-status-red ml-1">*</span>}
-            </label>
-            {propSchema.description && (
-              <p className="text-xs text-gray-500 mb-2">{propSchema.description}</p>
-            )}
+            >
+              {t('tool.formMode')}
+            </button>
+            <button
+              type="button"
+              onClick={switchToJsonMode}
+              className={`px-3 py-1 text-sm rounded-md transition-colors ${isJsonMode
+                ? 'px-4 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 text-sm btn-primary'
+                : 'text-sm text-gray-600 bg-gray-200 rounded hover:bg-gray-300 btn-secondary'
+                }`}
+            >
+              {t('tool.jsonMode')}
+            </button>
+          </div>
+        </div>
 
-            <div className="border border-gray-200 rounded-md p-4 bg-gray-50">
-              {Object.entries(propSchema.properties).map(([objKey, objSchema]) => (
-                renderField(objKey, objSchema as JsonSchema, fullPath)
-              ))}
+        {/* JSON Mode */}
+        {isJsonMode ? (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t('tool.jsonConfiguration')}
+            </label>
+              <textarea
+                value={jsonText}
+                onChange={(e) => handleJsonTextChange(e.target.value)}
+                placeholder={`{\n  "key": "value"\n}`}
+                className={`w-full h-64 border rounded-md px-3 py-2 font-mono text-sm resize-y form-input ${jsonError ? 'border-red-500' : 'border-gray-300'
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              />
+              {jsonError && <p className="text-status-red text-xs mt-1">{jsonError}</p>}
             </div>
 
-            {error && <p className="text-status-red text-xs mt-1">{error}</p>}
-          </div>
-        );
-      } else {
-        // Object without defined properties - render as JSON textarea
-        return (
-          <div key={fullPath} className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {key}
-              {(path ? getNestedValue(jsonSchema, path)?.required?.includes(key) : jsonSchema.required?.includes(key)) && <span className="text-status-red ml-1">*</span>}
-              <span className="text-xs text-gray-500 ml-1">(JSON object)</span>
-            </label>
-            {propSchema.description && (
-              <p className="text-xs text-gray-500 mb-2">{propSchema.description}</p>
-            )}
-            <textarea
-              value={typeof value === 'object' ? JSON.stringify(value, null, 2) : value || '{}'}
-              onChange={(e) => {
+            <div className="flex justify-end space-x-2 pt-4">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="px-4 py-1 text-sm text-gray-600 bg-gray-200 rounded hover:bg-gray-300 btn-secondary"
+              >
+                {t('tool.cancel')}
+              </button>
+              <button
+                onClick={() => {
                 try {
-                  const parsedValue = JSON.parse(e.target.value);
-                  handleInputChange(fullPath, parsedValue);
-                } catch (err) {
-                  // Keep the string value if it's not valid JSON yet
-                  handleInputChange(fullPath, e.target.value);
+                    const parsedJson = JSON.parse(jsonText);
+                    onSubmit(parsedJson);
+                  } catch (error) {
+                    setJsonError(t('tool.invalidJsonFormat'));
                 }
               }}
-              placeholder={`{\n  "key": "value"\n}`}
-              className={`w-full border rounded-md px-3 py-2 font-mono text-sm ${error ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              rows={4}
-            />
-            {error && <p className="text-status-red text-xs mt-1">{error}</p>}
+                disabled={loading || !!jsonError}
+                className="px-4 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 text-sm btn-primary"
+              >
+                {loading ? t('tool.running') : t('tool.runTool')}
+              </button>
           </div>
-        );
-      }
-    } if (propSchema.type === 'string') {
-      if (propSchema.enum) {
-        return (
-          <div key={fullPath} className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {key}
-              {(path ? false : jsonSchema.required?.includes(key)) && <span className="text-status-red ml-1">*</span>}
-            </label>
-            {propSchema.description && (
-              <p className="text-xs text-gray-500 mb-2">{propSchema.description}</p>
+          </div>
+        ) : (
+          /* Form Mode */
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {Object.entries(jsonSchema.properties || {}).map(([key, propSchema]) =>
+              renderField(key, propSchema)
             )}
-            <select
-              value={value || ''}
-              onChange={(e) => handleInputChange(fullPath, e.target.value)}
-              className={`w-full border rounded-md px-3 py-2 ${error ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            >
-              <option value="">{t('tool.selectOption')}</option>
-              {propSchema.enum.map((option, idx) => (
-                <option key={idx} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-            {error && <p className="text-status-red text-xs mt-1">{error}</p>}
-          </div>
-        );
-      } else {
-        return (
-          <div key={fullPath} className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {key}
-              {(path ? false : jsonSchema.required?.includes(key)) && <span className="text-status-red ml-1">*</span>}
-            </label>
-            {propSchema.description && (
-              <p className="text-xs text-gray-500 mb-2">{propSchema.description}</p>
-            )}
-            <input
-              type="text"
-              value={value || ''}
-              onChange={(e) => handleInputChange(fullPath, e.target.value)}
-              className={`w-full border rounded-md px-3 py-2 ${error ? 'border-red' : 'border-gray-200'} focus:outline-none form-input`}
-            />
-            {error && <p className="text-status-red text-xs mt-1">{error}</p>}
-          </div>
-        );
-      }
-    } if (propSchema.type === 'number' || propSchema.type === 'integer') {
-      return (
-        <div key={fullPath} className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {key}
-            {(path ? false : jsonSchema.required?.includes(key)) && <span className="text-status-red ml-1">*</span>}
-          </label>
-          {propSchema.description && (
-            <p className="text-xs text-gray-500 mb-2">{propSchema.description}</p>
-          )}
-          <input
-            type="number"
-            step={propSchema.type === 'integer' ? '1' : 'any'}
-            value={value || ''}
-            onChange={(e) => {
-              const val = e.target.value === '' ? '' : propSchema.type === 'integer' ? parseInt(e.target.value) : parseFloat(e.target.value);
-              handleInputChange(fullPath, val);
-            }}
-            className={`w-full border rounded-md px-3 py-2 form-input ${error ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          />
-          {error && <p className="text-status-red text-xs mt-1">{error}</p>}
-        </div>
-      );
-    }
 
-    if (propSchema.type === 'boolean') {
-      return (
-        <div key={fullPath} className="mb-4">
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              checked={value || false}
-              onChange={(e) => handleInputChange(fullPath, e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label className="ml-2 block text-sm text-gray-700">
-              {key}
-              {(path ? false : jsonSchema.required?.includes(key)) && <span className="text-status-red ml-1">*</span>}
-            </label>
+            <div className="flex justify-end space-x-2 pt-4">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="px-4 py-1 text-sm text-gray-600 bg-gray-200 rounded hover:bg-gray-300 btn-secondary"
+              >
+                {t('tool.cancel')}
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-4 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 text-sm btn-primary"
+              >
+                {loading ? t('tool.running') : t('tool.runTool')}
+              </button>
           </div>
-          {propSchema.description && (
-            <p className="text-xs text-gray-500 mt-1">{propSchema.description}</p>
-          )}
-          {error && <p className="text-status-red text-xs mt-1">{error}</p>}
-        </div>
-      );
-    }    // For other types, show as text input with description
-    return (
-      <div key={fullPath} className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          {key}
-          {(path ? false : jsonSchema.required?.includes(key)) && <span className="text-status-red ml-1">*</span>}
-          <span className="text-xs text-gray-500 ml-1">({propSchema.type})</span>
-        </label>
-        {propSchema.description && (
-          <p className="text-xs text-gray-500 mb-2">{propSchema.description}</p>
+          </form>
         )}
-        <input
-          type="text"
-          value={value || ''}
-          onChange={(e) => handleInputChange(fullPath, e.target.value)}
-          placeholder={t('tool.enterValue', { type: propSchema.type })}
-          className={`w-full border rounded-md px-3 py-2 ${error ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500 form-input`}
-        />
-        {error && <p className="text-status-red text-xs mt-1">{error}</p>}
       </div>
     );
   };
