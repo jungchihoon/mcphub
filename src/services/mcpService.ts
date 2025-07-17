@@ -288,7 +288,7 @@ const callToolWithReconnect = async (
 
       if (isHttp40xError && attempt < maxRetries && serverInfo.transport && isStreamableHttp) {
         console.warn(
-          `HTTP 40x error detected for StreamableHTTP server ${serverInfo.name}, attempting reconnection (attempt ${attempt + 1}/${maxRetries + 1})`,
+          `[${serverInfo.name}] ⚠️ HTTP 40x 오류 감지, 재연결 시도 중 (${attempt + 1}/${maxRetries + 1})`,
         );
 
         try {
@@ -353,12 +353,12 @@ const callToolWithReconnect = async (
             // 연결은 성공했으므로 계속 진행
           }
 
-          console.log(`Successfully reconnected to server: ${serverInfo.name}`);
+          console.log(`[${serverInfo.name}] ✅ 재연결 성공`);
 
           // 다음 시도로 계속
           continue;
         } catch (reconnectError) {
-          console.error(`Failed to reconnect to server ${serverInfo.name}:`, reconnectError);
+          console.error(`[${serverInfo.name}] ❌ 재연결 실패:`, reconnectError);
           serverInfo.status = 'disconnected';
           serverInfo.error = `Failed to reconnect: ${reconnectError}`;
 
@@ -527,11 +527,11 @@ export const initializeClientsFromSettings = async (isInit: boolean): Promise<Se
     client
       .connect(transport, initRequestOptions || requestOptions)
       .then(() => {
-        console.log(`Successfully connected client for server: ${name}`);
+        console.log(`[${name}] ✅ 서버 연결 성공`);
         client
           .listTools({}, initRequestOptions || requestOptions)
           .then((tools) => {
-            console.log(`Successfully listed ${tools.tools.length} tools for server: ${name}`);
+            console.log(`[${name}] 📋 도구 목록 조회 완료: ${tools.tools.length}개 도구`);
 
             serverInfo.tools = tools.tools.map((tool) => ({
               name: `${name}-${tool.name}`,
@@ -548,21 +548,17 @@ export const initializeClientsFromSettings = async (isInit: boolean): Promise<Se
             saveToolsAsVectorEmbeddings(name, serverInfo.tools);
           })
           .catch((error) => {
-            console.error(
-              `Failed to list tools for server ${name} by error: ${error} with stack: ${error.stack}`,
-            );
+            console.error(`[${name}] ❌ 도구 목록 조회 실패: ${error.message || error}`);
             serverInfo.status = 'disconnected';
             serverInfo.error = `Failed to list tools: ${error.stack} `;
           });
       })
       .catch((error) => {
-        console.error(
-          `Failed to connect client for server ${name} by error: ${error} with stack: ${error.stack}`,
-        );
+        console.error(`[${name}] ❌ 서버 연결 실패: ${error.message || error}`);
         serverInfo.status = 'disconnected';
         serverInfo.error = `Failed to connect: ${error.stack} `;
       });
-    console.log(`Initialized client for server: ${name}`);
+    console.log(`[${name}] 🚀 서버 클라이언트 초기화 시작`);
   }
 
   return serverInfos;
@@ -870,6 +866,7 @@ Available servers: ${serversList}`;
     };
   }
 
+  // 서버별 tool 목록을 서버 단위로 추상화하여 클라이언트에 노출
   const allServerInfos = serverInfos.filter((serverInfo) => {
     if (serverInfo.enabled === false) return false;
     if (!group) return true;
@@ -878,29 +875,49 @@ Available servers: ${serversList}`;
     return serversInGroup.includes(serverInfo.name);
   });
 
-  const allTools = [];
+  // 각 서버를 하나의 "도구"로 표현 (클라이언트에서는 서버명만 보임)
+  const serverTools = [];
   for (const serverInfo of allServerInfos) {
-    if (serverInfo.tools && serverInfo.tools.length > 0) {
-      // Filter tools based on server configuration and apply custom descriptions
+    if (serverInfo.status === 'connected' && serverInfo.tools && serverInfo.tools.length > 0) {
+      // 해당 서버의 활성 도구 개수 계산
       const enabledTools = filterToolsByConfig(serverInfo.name, serverInfo.tools);
-
-      // Apply custom descriptions from configuration
-      const settings = loadSettings();
-      const serverConfig = settings.mcpServers[serverInfo.name];
-      const toolsWithCustomDescriptions = enabledTools.map((tool) => {
-        const toolConfig = serverConfig?.tools?.[tool.name];
-        return {
-          ...tool,
-          description: toolConfig?.description || tool.description, // Use custom description if available
-        };
-      });
-
-      allTools.push(...toolsWithCustomDescriptions);
+      const toolCount = enabledTools.length;
+      
+      if (toolCount > 0) {
+        // 서버 도구 목록을 요약하여 설명에 포함
+        const toolNames = enabledTools.slice(0, 5).map(tool => {
+          // 서버 prefix 제거
+          const cleanName = tool.name.startsWith(`${serverInfo.name}-`) 
+            ? tool.name.replace(`${serverInfo.name}-`, '') 
+            : tool.name;
+          return cleanName;
+        }).join(', ');
+        const moreText = enabledTools.length > 5 ? ` and ${enabledTools.length - 5} more tools` : '';
+        
+        serverTools.push({
+          name: serverInfo.name,
+          description: `${serverInfo.name} MCP Server with ${toolCount} available tools: ${toolNames}${moreText}. Use this server to access capabilities like ${toolNames}.`,
+          inputSchema: {
+            type: 'object',
+            properties: {
+              toolName: {
+                type: 'string',
+                description: `Name of the specific tool to execute on ${serverInfo.name} server. Available tools: ${enabledTools.map(t => t.name.replace(`${serverInfo.name}-`, '')).join(', ')}`,
+              },
+              arguments: {
+                type: 'object',
+                description: 'Arguments to pass to the tool based on its requirements',
+              },
+            },
+            required: ['toolName'],
+          },
+        });
+      }
     }
   }
 
   return {
-    tools: allTools,
+    tools: serverTools,
   };
 };
 
@@ -930,11 +947,11 @@ export const handleCallToolRequest = async (request: any, extra: any) => {
         thresholdNum = 0.4;
       }
 
-      console.log(`Using similarity threshold: ${thresholdNum} for query: "${query}"`);
+      console.log(`🔍 도구 검색: "${query}" | 임계값: ${thresholdNum} | 제한: ${limitNum}`);
       const servers = undefined; // No server filtering
 
       const searchResults = await searchToolsByVector(query, limitNum, thresholdNum, servers);
-      console.log(`Search results: ${JSON.stringify(searchResults)}`);
+      console.log(`🔍 검색 결과: ${searchResults.length}개 도구 발견 - ${searchResults.map(r => `${r.serverName}:${r.toolName}`).join(', ')}`);
       // Find actual tool information from serverInfos by serverName and toolName
       const tools = searchResults
         .map((result) => {
@@ -1054,9 +1071,7 @@ export const handleCallToolRequest = async (request: any, extra: any) => {
         const finalArgs =
           toolArgs && Object.keys(toolArgs).length > 0 ? toolArgs : request.params.arguments || {};
 
-        console.log(
-          `Invoking OpenAPI tool '${toolName}' on server '${targetServerInfo.name}' with arguments: ${JSON.stringify(finalArgs)}`,
-        );
+        console.log(`[${targetServerInfo.name}] 🔧 OpenAPI 도구 호출: ${toolName} | 인수: ${JSON.stringify(finalArgs)}`);
 
         // Remove server prefix from tool name if present
         const cleanToolName = toolName.startsWith(`${targetServerInfo.name}-`)
@@ -1065,7 +1080,7 @@ export const handleCallToolRequest = async (request: any, extra: any) => {
 
         const result = await openApiClient.callTool(cleanToolName, finalArgs);
 
-        console.log(`OpenAPI tool invocation result: ${JSON.stringify(result)}`);
+        console.log(`[${targetServerInfo.name}] ✅ OpenAPI 도구 완료: ${toolName} | 응답: ${typeof result === 'object' ? JSON.stringify(result, null, 2) : result}`);
         return {
           content: [
             {
@@ -1086,9 +1101,7 @@ export const handleCallToolRequest = async (request: any, extra: any) => {
       const finalArgs =
         toolArgs && Object.keys(toolArgs).length > 0 ? toolArgs : request.params.arguments || {};
 
-      console.log(
-        `Invoking tool '${toolName}' on server '${targetServerInfo.name}' with arguments: ${JSON.stringify(finalArgs)}`,
-      );
+      console.log(`[${targetServerInfo.name}] 🔧 MCP 도구 호출: ${toolName} | 인수: ${JSON.stringify(finalArgs)}`);
 
       toolName = toolName.startsWith(`${targetServerInfo.name}-`)
         ? toolName.replace(`${targetServerInfo.name}-`, '')
@@ -1102,14 +1115,69 @@ export const handleCallToolRequest = async (request: any, extra: any) => {
         targetServerInfo.options || {},
       );
 
-      console.log(`Tool invocation result: ${JSON.stringify(result)}`);
+      console.log(`[${targetServerInfo.name}] ✅ MCP 도구 완료: ${toolName} | 응답: ${typeof result === 'object' ? JSON.stringify(result, null, 2) : result}`);
       return result;
     }
 
-    // Regular tool handling
+    // 서버명으로 직접 호출하는 경우 처리 (새로운 추상화 방식)
+    // 먼저 서버명인지 확인
+    const serverByName = getServerByName(request.params.name);
+    if (serverByName) {
+      // 서버명으로 호출된 경우, arguments에서 toolName 추출
+      const { toolName, arguments: toolArgs = {} } = request.params.arguments || {};
+      
+      if (!toolName) {
+        throw new Error(`toolName is required when calling server ${request.params.name} directly`);
+      }
+
+      // 실제 tool 이름 구성 (서버 prefix 추가)
+      const fullToolName = `${serverByName.name}-${toolName}`;
+      
+      // 해당 도구가 서버에 존재하는지 확인
+      const toolExists = serverByName.tools.some((tool) => tool.name === fullToolName);
+      if (!toolExists) {
+        throw new Error(`Tool '${toolName}' not found on server '${serverByName.name}'. Available tools: ${serverByName.tools.map(t => t.name.replace(`${serverByName.name}-`, '')).join(', ')}`);
+      }
+
+      console.log(`[${serverByName.name}] 🔧 서버 추상화 도구 호출: ${toolName} | 인수: ${JSON.stringify(toolArgs)}`);
+
+      // Handle OpenAPI servers differently
+      if (serverByName.openApiClient) {
+        const result = await serverByName.openApiClient.callTool(toolName, toolArgs);
+        console.log(`[${serverByName.name}] ✅ 서버 추상화 OpenAPI 도구 완료: ${toolName} | 응답: ${typeof result === 'object' ? JSON.stringify(result, null, 2) : result}`);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result),
+            },
+          ],
+        };
+      }
+
+      // Handle MCP servers
+      const client = serverByName.client;
+      if (!client) {
+        throw new Error(`Client not found for server: ${serverByName.name}`);
+      }
+
+      const result = await callToolWithReconnect(
+        serverByName,
+        {
+          name: toolName,
+          arguments: toolArgs,
+        },
+        serverByName.options || {},
+      );
+
+      console.log(`[${serverByName.name}] ✅ 서버 추상화 MCP 도구 완료: ${toolName} | 응답: ${typeof result === 'object' ? JSON.stringify(result, null, 2) : result}`);
+      return result;
+    }
+
+    // 기존 방식: 전체 도구명으로 호출 (하위 호환성)
     const serverInfo = getServerByTool(request.params.name);
     if (!serverInfo) {
-      throw new Error(`Server not found: ${request.params.name}`);
+      throw new Error(`Server not found for tool: ${request.params.name}`);
     }
 
     // Handle OpenAPI servers differently
@@ -1122,13 +1190,11 @@ export const handleCallToolRequest = async (request: any, extra: any) => {
         ? request.params.name.replace(`${serverInfo.name}-`, '')
         : request.params.name;
 
-      console.log(
-        `Invoking OpenAPI tool '${cleanToolName}' on server '${serverInfo.name}' with arguments: ${JSON.stringify(request.params.arguments)}`,
-      );
+      console.log(`[${serverInfo.name}] 🔧 레거시 OpenAPI 도구 호출: ${cleanToolName} | 인수: ${JSON.stringify(request.params.arguments)}`);
 
       const result = await openApiClient.callTool(cleanToolName, request.params.arguments || {});
 
-      console.log(`OpenAPI tool invocation result: ${JSON.stringify(result)}`);
+      console.log(`[${serverInfo.name}] ✅ 레거시 OpenAPI 도구 완료: ${cleanToolName} | 응답: ${typeof result === 'object' ? JSON.stringify(result, null, 2) : result}`);
       return {
         content: [
           {
@@ -1145,18 +1211,22 @@ export const handleCallToolRequest = async (request: any, extra: any) => {
       throw new Error(`Client not found for server: ${serverInfo.name}`);
     }
 
+    const originalToolName = request.params.name;
     request.params.name = request.params.name.startsWith(`${serverInfo.name}-`)
       ? request.params.name.replace(`${serverInfo.name}-`, '')
       : request.params.name;
+    
+    console.log(`[${serverInfo.name}] 🔧 레거시 MCP 도구 호출: ${request.params.name} | 인수: ${JSON.stringify(request.params.arguments)}`);
+    
     const result = await callToolWithReconnect(
       serverInfo,
       request.params,
       serverInfo.options || {},
     );
-    console.log(`Tool call result: ${JSON.stringify(result)}`);
+    console.log(`[${serverInfo.name}] ✅ 레거시 MCP 도구 완료: ${request.params.name} | 응답: ${typeof result === 'object' ? JSON.stringify(result, null, 2) : result}`);
     return result;
   } catch (error) {
-    console.error(`Error handling CallToolRequest: ${error}`);
+    console.error(`❌ 도구 호출 오류: ${error}`);
     return {
       content: [
         {

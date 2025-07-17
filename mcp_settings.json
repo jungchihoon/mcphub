@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-     "firecrawl-mcp": {
+    "firecrawl-mcp": {
       "command": "npx",
       "args": [
         "-y",
@@ -9,32 +9,6 @@
       "env": {
         "FIRECRAWL_API_KEY": "fc-89c11d9ad6ab4636bbfdfff9731d0972"
       }
-    },
-    "Sequential Thinking Tools": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "@smithery/cli@latest",
-        "run",
-        "@xinzhongyouhai/mcp-sequentialthinking-tools",
-        "--key",
-        "80d1c482-d213-4a38-a732-fc780af4a2d1"
-      ],
-      "env": {}
-    },
-    "Context7": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "@smithery/cli@latest",
-        "run",
-        "@upstash/context7-mcp",
-        "--key",
-        "80d1c482-d213-4a38-a732-fc780af4a2d1"
-      ],
-      "env": {}
     },
     "Github": {
       "type": "stdio",
@@ -57,6 +31,25 @@
       "username": "admin",
       "password": "$2b$10$Vt7krIvjNgyN67LXqly0uOcTpN0LI55cYRbcKC71pUDAP0nJ7RPa.",
       "isAdmin": true
+    },
+    {
+      "username": "github_kksshh0612",
+      "password": "$2b$10$bH8sR6Zg4YJYfe7A9WT9pu5Vcmc8TdUFxs86MHjycxxxCyTyL19uu",
+      "isAdmin": false
+    },
+    {
+      "username": "github_jungchihoon",
+      "password": "$2b$10$DDkZ2ZVjNydSSltwnvoKmOSABQ1JuWnswg9yuFXSQOoqx5lH3cpz2",
+      "isAdmin": false
     }
-  ]
+  ],
+  "systemConfig": {
+    "smartRouting": {
+      "enabled": true,
+      "openaiApiKey": "${OPENAI_API_KEY}",
+      "openaiApiBaseUrl": "https://api.openai.com/v1",
+      "openaiApiEmbeddingModel": "text-embedding-3-small",
+      "dbUrl": "postgresql://localhost:5432/mcphub"
+    }
+  }
 }
