@@ -1211,7 +1211,6 @@ export const handleCallToolRequest = async (request: any, extra: any) => {
       throw new Error(`Client not found for server: ${serverInfo.name}`);
     }
 
-    const originalToolName = request.params.name;
     request.params.name = request.params.name.startsWith(`${serverInfo.name}-`)
       ? request.params.name.replace(`${serverInfo.name}-`, '')
       : request.params.name;
