@@ -862,6 +862,120 @@ Available servers: ${serversList}`;
             required: ['toolName'],
           },
         },
+        {
+          name: 'batch_execute_tools',
+          description: 
+            "ADVANCED: Execute multiple tools in sequence or parallel within a single call. This is perfect for complex workflows that require multiple tool executions to complete a task.\n\nUse this when you need to:\n- Execute multiple related tools for a complex task\n- Chain tool outputs as inputs to subsequent tools\n- Perform parallel operations for efficiency\n- Complete multi-step workflows in one go\n\nWorkflow: search_tools → identify multiple needed tools → batch_execute_tools with all tools and their arguments.\n\nIMPORTANT: Ensure all tools exist and arguments are correct before batch execution. Failed tools in the batch will be reported individually.",
+          inputSchema: {
+            type: 'object',
+            properties: {
+              tools: {
+                type: 'array',
+                description: 'Array of tools to execute',
+                items: {
+                  type: 'object',
+                  properties: {
+                    toolName: {
+                      type: 'string',
+                      description: 'The exact name of the tool to invoke'
+                    },
+                    arguments: {
+                      type: 'object',
+                      description: 'The arguments to pass to the tool'
+                    },
+                    id: {
+                      type: 'string',
+                      description: 'Unique identifier for this tool execution (optional)'
+                    }
+                  },
+                  required: ['toolName']
+                }
+              },
+              execution: {
+                type: 'string',
+                enum: ['sequential', 'parallel'],
+                description: 'Execution mode: sequential (one after another) or parallel (all at once)',
+                default: 'sequential'
+              },
+              continueOnError: {
+                type: 'boolean',
+                description: 'Whether to continue executing remaining tools if one fails',
+                default: true
+              }
+            },
+            required: ['tools']
+          }
+        },
+        {
+          name: 'workflow_execute',
+          description:
+            "EXPERT: Execute complex workflows with conditional logic, data flow between tools, and advanced control structures. This is the most powerful tool for creating sophisticated automation workflows.\n\nFeatures:\n- Conditional execution based on previous results\n- Data transformation and variable substitution\n- Loop constructs for repetitive tasks\n- Error handling and retry logic\n- Output aggregation and formatting\n\nUse cases:\n- Multi-step data processing pipelines\n- Conditional workflows based on external data\n- Complex automation requiring decision trees\n- Integration workflows with multiple APIs",
+          inputSchema: {
+            type: 'object',
+            properties: {
+              workflow: {
+                type: 'object',
+                description: 'Workflow definition',
+                properties: {
+                  name: {
+                    type: 'string',
+                    description: 'Workflow name for identification'
+                  },
+                  description: {
+                    type: 'string',
+                    description: 'Description of what this workflow does'
+                  },
+                  steps: {
+                    type: 'array',
+                    description: 'Array of workflow steps',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        id: {
+                          type: 'string',
+                          description: 'Unique step identifier'
+                        },
+                        name: {
+                          type: 'string',
+                          description: 'Step name for readability'
+                        },
+                        toolName: {
+                          type: 'string',
+                          description: 'Tool to execute in this step'
+                        },
+                        arguments: {
+                          type: 'object',
+                          description: 'Arguments for the tool (can use variables like ${step_id.result})'
+                        },
+                        condition: {
+                          type: 'string',
+                          description: 'JavaScript condition to determine if step should execute (optional)'
+                        },
+                        retryCount: {
+                          type: 'integer',
+                          description: 'Number of retry attempts for this step',
+                          default: 0
+                        },
+                        continueOnError: {
+                          type: 'boolean',
+                          description: 'Whether to continue workflow if this step fails',
+                          default: true
+                        }
+                      },
+                      required: ['id', 'toolName']
+                    }
+                  }
+                },
+                required: ['steps']
+              },
+              variables: {
+                type: 'object',
+                description: 'Initial variables available to the workflow'
+              }
+            },
+            required: ['workflow']
+          }
+        },
       ],
     };
   }
@@ -1117,6 +1231,172 @@ export const handleCallToolRequest = async (request: any, extra: any) => {
 
       console.log(`[${targetServerInfo.name}] ✅ MCP 도구 완료: ${toolName} | 응답: ${typeof result === 'object' ? JSON.stringify(result, null, 2) : result}`);
       return result;
+    }
+
+    // Special handling for batch_execute_tools
+    if (request.params.name === 'batch_execute_tools') {
+      const { tools, execution = 'sequential', continueOnError = true } = request.params.arguments || {};
+
+      if (!tools || !Array.isArray(tools) || tools.length === 0) {
+        throw new Error('tools parameter is required and must be a non-empty array');
+      }
+
+      console.log(`🔄 배치 도구 실행 시작: ${tools.length}개 도구, 모드: ${execution}`);
+
+      const results: any[] = [];
+      const executeSingleTool = async (tool: any, index: number) => {
+        const { toolName, arguments: toolArgs = {}, id } = tool;
+        const toolId = id || `tool_${index}`;
+
+        try {
+          // Find the server that has this tool
+          const targetServerInfo = serverInfos.find(
+            (serverInfo) =>
+              serverInfo.status === 'connected' &&
+              serverInfo.enabled !== false &&
+              serverInfo.tools.some((serverTool) => serverTool.name === toolName),
+          );
+
+          if (!targetServerInfo) {
+            throw new Error(`No available servers found with tool: ${toolName}`);
+          }
+
+          // Check if the tool exists on the server
+          const toolExists = targetServerInfo.tools.some((serverTool) => serverTool.name === toolName);
+          if (!toolExists) {
+            throw new Error(`Tool '${toolName}' not found on server '${targetServerInfo.name}'`);
+          }
+
+          console.log(`[${toolId}] 🔧 도구 실행: ${toolName} | 서버: ${targetServerInfo.name}`);
+
+          let result;
+          // Handle OpenAPI servers
+          if (targetServerInfo.openApiClient) {
+            const cleanToolName = toolName.startsWith(`${targetServerInfo.name}-`)
+              ? toolName.replace(`${targetServerInfo.name}-`, '')
+              : toolName;
+            result = await targetServerInfo.openApiClient.callTool(cleanToolName, toolArgs);
+            result = {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify(result),
+                },
+              ],
+            };
+          } else {
+            // Handle MCP servers
+            const client = targetServerInfo.client;
+            if (!client) {
+              throw new Error(`Client not found for server: ${targetServerInfo.name}`);
+            }
+
+            const cleanToolName = toolName.startsWith(`${targetServerInfo.name}-`)
+              ? toolName.replace(`${targetServerInfo.name}-`, '')
+              : toolName;
+
+            result = await callToolWithReconnect(
+              targetServerInfo,
+              {
+                name: cleanToolName,
+                arguments: toolArgs,
+              },
+              targetServerInfo.options || {},
+            );
+          }
+
+          console.log(`[${toolId}] ✅ 도구 완료: ${toolName}`);
+          return {
+            id: toolId,
+            toolName,
+            success: true,
+            result,
+            server: targetServerInfo.name,
+            executedAt: new Date().toISOString(),
+          };
+        } catch (error) {
+          console.error(`[${toolId}] ❌ 도구 실패: ${toolName} | 오류: ${error}`);
+          const errorResult = {
+            id: toolId,
+            toolName,
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+            executedAt: new Date().toISOString(),
+          };
+
+          if (!continueOnError) {
+            throw error;
+          }
+
+          return errorResult;
+        }
+      };
+
+      try {
+        if (execution === 'parallel') {
+          // Parallel execution
+          console.log(`⚡ 병렬 실행 모드: ${tools.length}개 도구 동시 실행`);
+          const promises = tools.map((tool, index) => executeSingleTool(tool, index));
+          results.push(...(await Promise.all(promises)));
+        } else {
+          // Sequential execution
+          console.log(`🔄 순차 실행 모드: ${tools.length}개 도구 순서대로 실행`);
+          for (let i = 0; i < tools.length; i++) {
+            const result = await executeSingleTool(tools[i], i);
+            results.push(result);
+
+            // If continueOnError is false and this tool failed, stop execution
+            if (!continueOnError && !result.success) {
+              break;
+            }
+          }
+        }
+
+        const successCount = results.filter(r => r.success).length;
+        const failureCount = results.filter(r => !r.success).length;
+
+        console.log(`🏁 배치 실행 완료: 성공 ${successCount}개, 실패 ${failureCount}개`);
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                summary: {
+                  totalTools: tools.length,
+                  successCount,
+                  failureCount,
+                  executionMode: execution,
+                  continueOnError,
+                },
+                results,
+              }, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        console.error(`❌ 배치 실행 중단: ${error}`);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                summary: {
+                  totalTools: tools.length,
+                  successCount: results.filter(r => r.success).length,
+                  failureCount: results.filter(r => !r.success).length,
+                  executionMode: execution,
+                  continueOnError,
+                  aborted: true,
+                  abortReason: error instanceof Error ? error.message : String(error),
+                },
+                results,
+              }, null, 2),
+            },
+          ],
+          isError: true,
+        };
+      }
     }
 
     // 서버명으로 직접 호출하는 경우 처리 (새로운 추상화 방식)
