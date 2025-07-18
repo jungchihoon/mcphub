@@ -8,6 +8,50 @@
       ],
       "env": {
         "FIRECRAWL_API_KEY": "fc-89c11d9ad6ab4636bbfdfff9731d0972"
+      },
+      "enabled": true
+    },
+    "sequentialthinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/jungchihoon/chihoon"
+      ]
+    },
+    "git": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-git",
+        "--repository",
+        "C:\\Users\\Administrator\\Desktop\\ums-roo-code"
+      ]
+    },
+    "github": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "-e",
+        "GITHUB_TOOLSETS",
+        "-e",
+        "GITHUB_READ_ONLY",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}",
+        "GITHUB_TOOLSETS": "",
+        "GITHUB_READ_ONLY": ""
       }
     },
     "Sequential Thinking Tools": {
@@ -21,7 +65,8 @@
         "--key",
         "80d1c482-d213-4a38-a732-fc780af4a2d1"
       ],
-      "env": {}
+      "env": {},
+      "enabled": false
     },
     "Context7": {
       "type": "stdio",
@@ -34,7 +79,8 @@
         "--key",
         "80d1c482-d213-4a38-a732-fc780af4a2d1"
       ],
-      "env": {}
+      "env": {},
+      "enabled": false
     },
     "Github": {
       "type": "stdio",
@@ -49,7 +95,24 @@
         "--profile",
         "clear-ox-TgjNs3"
       ],
-      "env": {}
+      "env": {},
+      "enabled": false
+    }
+  },
+  "systemConfig": {
+    "routing": {
+      "enableGlobalRoute": true,
+      "enableGroupNameRoute": true,
+      "enableBearerAuth": false,
+      "bearerAuthKey": "",
+      "skipAuth": true
+    },
+    "smartRouting": {
+      "enabled": true,
+      "openaiApiKey": "your_openai_api_key_here",
+      "openaiApiBaseUrl": "https://api.openai.com/v1",
+      "openaiApiEmbeddingModel": "text-embedding-3-small",
+      "dbUrl": "postgresql://localhost:5432/mcphub"
     }
   },
   "users": [
