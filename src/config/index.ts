@@ -33,6 +33,11 @@ export const loadSettings = (): McpSettings => {
     const settingsData = fs.readFileSync(settingsPath, 'utf8');
     const settings = JSON.parse(settingsData);
 
+    // Process environment variables in systemConfig
+    if (settings.systemConfig) {
+      settings.systemConfig = processSystemConfig(settings.systemConfig);
+    }
+
     // Update cache
     settingsCache = settings;
 
@@ -101,6 +106,61 @@ export const expandEnvVars = (value: string): string => {
   // Also replace $VAR format (common on Unix-like systems)
   result = result.replace(/\$([A-Z_][A-Z0-9_]*)/g, (_, key) => process.env[key] || '');
   return result;
+};
+
+/**
+ * Process systemConfig to expand environment variables with default values
+ */
+const processSystemConfig = (systemConfig: any): any => {
+  if (!systemConfig || typeof systemConfig !== 'object') {
+    return systemConfig;
+  }
+
+  const processed = JSON.parse(JSON.stringify(systemConfig)); // Deep clone
+
+  // Process smartRouting config
+  if (processed.smartRouting) {
+    const smartRouting = processed.smartRouting;
+    
+    // Handle enabled field with default value
+    if (typeof smartRouting.enabled === 'string' && smartRouting.enabled.startsWith('${')) {
+      const match = smartRouting.enabled.match(/\$\{([^}:]+)(?::([^}]*))?\}/);
+      if (match) {
+        const [, envVar, defaultValue] = match;
+        const envValue = process.env[envVar];
+        smartRouting.enabled = envValue ? envValue === 'true' : (defaultValue === 'true');
+      }
+    }
+
+    // Handle other string fields with default values
+    ['openaiApiKey', 'openaiApiBaseUrl', 'openaiApiEmbeddingModel', 'dbUrl'].forEach(field => {
+      if (typeof smartRouting[field] === 'string' && smartRouting[field].startsWith('${')) {
+        smartRouting[field] = expandEnvVarsWithDefaults(smartRouting[field]);
+      }
+    });
+  }
+
+  return processed;
+};
+
+/**
+ * Expand environment variables with support for default values
+ * Format: ${VAR_NAME:-default_value}
+ */
+const expandEnvVarsWithDefaults = (value: string): string => {
+  if (typeof value !== 'string') {
+    return String(value);
+  }
+  
+  // Replace ${VAR:-default} format
+  return value.replace(/\$\{([^}:]+)(?::(-[^}]*))?\}/g, (_, envVar, defaultPart) => {
+    const envValue = process.env[envVar];
+    if (envValue !== undefined) {
+      return envValue;
+    }
+    // Extract default value (remove the leading :- )
+    return defaultPart ? defaultPart.substring(1) : '';
+  });
 };
 
 export default defaultConfig;
