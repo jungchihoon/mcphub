@@ -9,47 +9,15 @@
       "env": {
         "FIRECRAWL_API_KEY": "fc-89c11d9ad6ab4636bbfdfff9731d0972"
       }
-    },
-    "Github": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "@smithery/cli@latest",
-        "run",
-        "@smithery-ai/github",
-        "--key",
-        "80d1c482-d213-4a38-a732-fc780af4a2d1",
-        "--profile",
-        "clear-ox-TgjNs3"
-      ],
-      "env": {}
     }
   },
-  "users": [
-    {
-      "username": "admin",
-      "password": "$2b$10$Vt7krIvjNgyN67LXqly0uOcTpN0LI55cYRbcKC71pUDAP0nJ7RPa.",
-      "isAdmin": true
-    },
-    {
-      "username": "github_kksshh0612",
-      "password": "$2b$10$bH8sR6Zg4YJYfe7A9WT9pu5Vcmc8TdUFxs86MHjycxxxCyTyL19uu",
-      "isAdmin": false
-    },
-    {
-      "username": "github_jungchihoon",
-      "password": "$2b$10$DDkZ2ZVjNydSSltwnvoKmOSABQ1JuWnswg9yuFXSQOoqx5lH3cpz2",
-      "isAdmin": false
-    }
-  ],
   "systemConfig": {
     "smartRouting": {
-      "enabled": true,
+      "enabled": "${SMART_ROUTING_ENABLED:-true}",
       "openaiApiKey": "${OPENAI_API_KEY}",
-      "openaiApiBaseUrl": "https://api.openai.com/v1",
-      "openaiApiEmbeddingModel": "text-embedding-3-small",
-      "dbUrl": "postgresql://localhost:5432/mcphub"
+      "openaiApiBaseUrl": "${OPENAI_API_BASE_URL:-https://api.openai.com/v1}",
+      "openaiApiEmbeddingModel": "${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}",
+      "dbUrl": "${DATABASE_URL:-postgresql://localhost:5432/mcphub}"
     }
   }
 }
