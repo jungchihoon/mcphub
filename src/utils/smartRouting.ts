@@ -67,7 +67,7 @@ export function getSmartRoutingConfig(): SmartRoutingConfig {
     ),
 
     // 데이터베이스 설정
-    dbUrl: getConfigValue([process.env.DB_URL], smartRoutingSettings.dbUrl, '', expandEnvVars),
+    dbUrl: getConfigValue([process.env.DATABASE_URL], smartRoutingSettings.dbUrl, '', expandEnvVars),
 
     // OpenAI API 설정
     openaiApiBaseUrl: getConfigValue(

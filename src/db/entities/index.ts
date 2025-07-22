@@ -1,7 +1,8 @@
-import { VectorEmbedding } from './VectorEmbedding.js';
+import { User } from './User.js';
+import { MCPHubKey } from './MCPHubKey.js';
 
-// Export all entities
-export default [VectorEmbedding];
+// Export all entities (Vector embedding removed - Smart Routing feature removed)
+export default [User, MCPHubKey];
 
 // Export individual entities for direct use
-export { VectorEmbedding };
+export { User, MCPHubKey };

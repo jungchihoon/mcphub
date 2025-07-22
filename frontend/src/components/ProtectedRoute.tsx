@@ -40,8 +40,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { t } = useTranslation();
   const { auth } = useAuth();
 
-  // 인증 상태 로딩 중일 때 로딩 화면 표시
-  if (auth.loading) {
+  // OAuth 리다이렉트 중인지 확인 (welcome 파라미터가 있으면 인증 처리 대기)
+  const urlParams = new URLSearchParams(window.location.search);
+  const isOAuthRedirect = urlParams.get('welcome') === 'true';
+
+  // 인증 상태 로딩 중이거나 OAuth 리다이렉트 중일 때 로딩 화면 표시
+  if (auth.loading || isOAuthRedirect) {
     return <div className="flex items-center justify-center h-screen">{t('app.loading')}</div>;
   }
 

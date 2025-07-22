@@ -15,19 +15,7 @@ export async function initializeDbModule(): Promise<boolean> {
   }
 }
 
-/**
- * Get the repository factory for a database entity type
- * @param entityType The type of entity to get a repository for
- */
-export function getRepositoryFactory(entityType: 'vectorEmbeddings') {
-  // Return the appropriate repository based on entity type
-  switch (entityType) {
-    case 'vectorEmbeddings':
-      return () => new repositories.VectorEmbeddingRepository();
-    default:
-      throw new Error(`Unknown entity type: ${entityType}`);
-  }
-}
+// Vector repository factory removed (Smart Routing feature removed)
 
 // Re-export everything from the database module
 export { initializeDatabase, closeDatabase, isDatabaseConnected, repositories };

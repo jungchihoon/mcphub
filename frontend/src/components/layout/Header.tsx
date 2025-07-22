@@ -14,15 +14,10 @@
  * - 테마 스위치
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import ThemeSwitch from '@/components/ui/ThemeSwitch';
-import GitHubIcon from '@/components/icons/GitHubIcon';
-import SponsorIcon from '@/components/icons/SponsorIcon';
-import WeChatIcon from '@/components/icons/WeChatIcon';
-import DiscordIcon from '@/components/icons/DiscordIcon';
-import SponsorDialog from '@/components/ui/SponsorDialog';
-import WeChatDialog from '@/components/ui/WeChatDialog';
+import UserProfileMenu from '@/components/ui/UserProfileMenu';
 
 /**
  * Header 컴포넌트의 Props 인터페이스
@@ -43,9 +38,10 @@ interface HeaderProps {
  * @returns {JSX.Element} 헤더 컴포넌트
  */
 const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
-  const { t, i18n } = useTranslation();
-  const [sponsorDialogOpen, setSponsorDialogOpen] = useState(false);
-  const [wechatDialogOpen, setWechatDialogOpen] = useState(false);
+  const { t } = useTranslation();
+  
+  // package.json에서 가져온 애플리케이션 버전
+  const appVersion = import.meta.env.PACKAGE_VERSION as string;
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm z-10">
@@ -66,64 +62,17 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
           <h1 className="ml-4 text-xl font-bold text-gray-900 dark:text-white">{t('app.title')}</h1>
         </div>
 
-        {/* 테마 스위치 및 버전 정보 */}
+        {/* 우측 상단 영역: 테마 스위치와 사용자 메뉴 */}
         <div className="flex items-center space-x-4">
-          {/* 버전 정보 표시 */}
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            {import.meta.env.PACKAGE_VERSION === 'dev'
-              ? import.meta.env.PACKAGE_VERSION
-              : `v${import.meta.env.PACKAGE_VERSION}`}
-          </span>
-          
-          {/* GitHub 링크 */}
-          <a
-            href="https://github.com/samanhappy/mcphub"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-            aria-label="GitHub Repository"
-          >
-            <GitHubIcon className="h-5 w-5" />
-          </a>
-          
-          {/* 언어별 소셜 링크 */}
-          {i18n.language === 'zh' ? (
-            <button
-              onClick={() => setWechatDialogOpen(true)}
-              className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 focus:outline-none"
-              aria-label={t('wechat.label')}
-            >
-              <WeChatIcon className="h-5 w-5" />
-            </button>
-          ) : (
-            <a
-              href="https://discord.gg/qMKNsn5Q"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-              aria-label={t('discord.label')}
-            >
-              <DiscordIcon className="h-5 w-5" />
-            </a>
-          )}
-          
-          {/* 후원 버튼 */}
-          <button
-            onClick={() => setSponsorDialogOpen(true)}
-            className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 focus:outline-none"
-            aria-label={t('sponsor.label')}
-          >
-            <SponsorIcon className="h-5 w-5" />
-          </button>
-          
           {/* 테마 스위치 */}
           <ThemeSwitch />
+          
+          {/* 사용자 프로필 메뉴 */}
+          <div className="min-w-0">
+            <UserProfileMenu collapsed={false} version={appVersion} />
+          </div>
         </div>
       </div>
-      
-      {/* 다이얼로그 컴포넌트들 */}
-      <SponsorDialog open={sponsorDialogOpen} onOpenChange={setSponsorDialogOpen} />
-      <WeChatDialog open={wechatDialogOpen} onOpenChange={setWechatDialogOpen} />
     </header>
   );
 };

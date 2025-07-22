@@ -141,13 +141,18 @@ const UserProfileMenu: React.FC<UserProfileMenuProps> = ({ collapsed, version })
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               {auth.user?.username || t('auth.user')}
             </span>
+            {auth.user?.isAdmin && (
+              <span className="text-xs text-indigo-600 dark:text-indigo-400">
+                관리자
+              </span>
+            )}
           </div>
         )}
       </button>
 
       {/* 드롭다운 메뉴 */}
       {isOpen && (
-        <div className="absolute top-0 transform -translate-y-full left-0 w-full min-w-max bg-white border border-gray-200 dark:bg-gray-800 py-1 z-50">
+        <div className={`absolute ${collapsed ? 'top-0 transform -translate-y-full left-0' : 'top-full mt-2 right-0'} w-full min-w-max bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 z-50`}>
           {/* 설정 메뉴 */}
           <button
             onClick={handleSettingsClick}

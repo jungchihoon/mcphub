@@ -9,6 +9,7 @@
  */
 
 import express from 'express';
+import session from 'express-session';
 import config from './config/index.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -23,6 +24,8 @@ import {
   handleMcpOtherRequest,
 } from './services/sseService.js';
 import { initializeDefaultUser } from './models/User.js';
+import { configurePassport, validateGitHubOAuthConfig } from './config/passport.js';
+import passport from 'passport';
 
 // ESM 환경에서 __dirname 구하기
 const __filename = fileURLToPath(import.meta.url);
@@ -61,6 +64,37 @@ export class AppServer {
     try {
       // 사용자가 없는 경우 기본 관리자 사용자 생성
       await initializeDefaultUser();
+
+      // GitHub OAuth 설정 검증
+      const oauthConfig = validateGitHubOAuthConfig();
+      if (oauthConfig.isValid) {
+        console.log('✅ GitHub OAuth 설정이 유효합니다.');
+      } else {
+        console.warn('⚠️ GitHub OAuth 설정이 불완전합니다. OAuth 기능이 비활성화됩니다.');
+      }
+
+      // Express 세션 설정 (Passport.js용)
+      this.app.use(session({
+        secret: process.env.SESSION_SECRET || 'mcphub-default-secret-change-in-production',
+        resave: false,
+        saveUninitialized: false,
+        name: 'connect.sid', // Express 기본 세션 쿠키 이름
+        cookie: {
+          secure: false, // HTTP 허용
+          httpOnly: false, // 브라우저에서 접근 가능
+          sameSite: 'lax', // 기본값으로 되돌림
+          maxAge: 24 * 60 * 60 * 1000 // 24시간
+        }
+      }));
+
+      // Passport.js 초기화
+      this.app.use(passport.initialize());
+      this.app.use(passport.session());
+      
+      // Passport.js OAuth 전략 설정
+      if (oauthConfig.isValid) {
+        configurePassport();
+      }
 
       // Express 미들웨어 초기화 (CORS, 바디 파서 등)
       initMiddlewares(this.app);

@@ -26,6 +26,16 @@ export class BaseRepository<T extends ObjectLiteral> {
   }
 
   /**
+   * Update entity by ID
+   * @param id Entity ID
+   * @param updates Partial entity data to update
+   */
+  async update(id: string, updates: Partial<T>): Promise<T | null> {
+    await this.repository.update(id, updates as any);
+    return this.findById(id);
+  }
+
+  /**
    * Find entity by ID
    * @param id Entity ID
    */

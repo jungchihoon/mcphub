@@ -37,7 +37,23 @@ import { getAllLogs, clearLogs, streamLogs } from '../controllers/logController.
 import { getRuntimeConfig, getPublicConfig } from '../controllers/configController.js';
 import { callTool } from '../controllers/toolController.js';
 import { uploadDxtFile, uploadMiddleware } from '../controllers/dxtController.js';
-import { auth } from '../middlewares/auth.js';
+import { auth, sessionAuth } from '../middlewares/auth.js';
+import { 
+  initiateGithubLogin, 
+  handleGithubCallback, 
+  logout, 
+  getCurrentUser as getOAuthUser, 
+  getUserKeys, 
+  createUserKey, 
+  updateKeyTokens, 
+  extendKeyExpiry, 
+  deactivateKey 
+} from '../controllers/oauthController.js';
+import {
+  getAllUsers,
+  updateUserAdminRole,
+  updateUserStatus
+} from '../controllers/adminController.js';
 
 const router = express.Router();
 
@@ -116,6 +132,23 @@ export const initRoutes = (app: express.Application): void => {
     ],
     changePassword,
   );
+
+  // GitHub OAuth routes
+  router.get('/auth/github', initiateGithubLogin);
+  router.get('/auth/github/callback', handleGithubCallback);
+  router.post('/auth/logout', logout);
+  
+  // Key management routes (JWT 기반 인증)
+  router.get('/keys', auth, getUserKeys);
+  router.post('/keys', auth, createUserKey);
+  router.put('/keys/:keyId/tokens', auth, updateKeyTokens);
+  router.post('/keys/:keyId/extend', auth, extendKeyExpiry);
+  router.post('/keys/:keyId/deactivate', auth, deactivateKey);
+
+  // Admin routes (JWT 기반 인증 + 관리자 권한 필요)
+  router.get('/admin/users', auth, getAllUsers);
+  router.patch('/admin/users/:userId/admin', auth, updateUserAdminRole);
+  router.patch('/admin/users/:userId/status', auth, updateUserStatus);
 
   // Runtime configuration endpoint (no auth required for frontend initialization)
   app.get(`${config.basePath}/config`, getRuntimeConfig);

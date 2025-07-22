@@ -62,3 +62,25 @@ export const auth = (req: Request, res: Response, next: NextFunction): void => {
     res.status(401).json({ success: false, message: 'Token is not valid' });
   }
 };
+
+/**
+ * 세션 기반 인증 미들웨어 (OAuth용)
+ */
+export const sessionAuth = (req: Request, res: Response, next: NextFunction): void => {
+  console.log('🔍 세션 인증 미들웨어 - 인증 확인');
+  console.log('🔍 req.user:', req.user);
+  console.log('🔍 req.isAuthenticated():', req.isAuthenticated ? req.isAuthenticated() : 'isAuthenticated 함수 없음');
+  console.log('🔍 req.session:', req.session);
+  
+  // Passport.js 세션 인증 확인
+  if (req.isAuthenticated && req.isAuthenticated() && req.user) {
+    console.log('✅ 세션 기반 인증 성공');
+    next();
+  } else {
+    console.log('❌ 세션 기반 인증 실패');
+    res.status(401).json({ 
+      success: false, 
+      message: '세션 인증이 필요합니다.' 
+    });
+  }
+};

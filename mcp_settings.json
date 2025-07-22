@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-     "firecrawl-mcp": {
+    "firecrawl-mcp": {
       "command": "npx",
       "args": [
         "-y",
@@ -58,5 +58,25 @@
       "password": "$2b$10$Vt7krIvjNgyN67LXqly0uOcTpN0LI55cYRbcKC71pUDAP0nJ7RPa.",
       "isAdmin": true
     }
-  ]
+  ],
+  "systemConfig": {
+    "routing": {
+      "enableGlobalRoute": true,
+      "enableGroupNameRoute": true,
+      "enableBearerAuth": false,
+      "bearerAuthKey": "Fn5zkGGwASa9dRAx2z8gkklcw5tpNeUo",
+      "skipAuth": false
+    },
+    "install": {
+      "pythonIndexUrl": "",
+      "npmRegistry": ""
+    },
+    "smartRouting": {
+      "enabled": false,
+      "dbUrl": "",
+      "openaiApiBaseUrl": "",
+      "openaiApiKey": "",
+      "openaiApiEmbeddingModel": ""
+    }
+  }
 }

@@ -203,11 +203,8 @@ export const useServerData = () => {
   const handleServerEdit = async (server: Server) => {
     try {
       // Fetch settings to get the full server config before editing
-      const token = localStorage.getItem('mcphub_token');
       const response = await fetch(getApiUrl('/settings'), {
-        headers: {
-          'x-auth-token': token || '',
-        },
+        credentials: 'include',
       });
 
       const settingsData: ApiResponse<{ mcpServers: Record<string, any> }> = await response.json();

@@ -48,10 +48,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return;
       }
 
-      // Normal authentication flow
+      // JWT 토큰 기반 인증
       const token = authService.getToken();
-
+      
       if (!token) {
+        console.log('🔍 AuthContext: JWT 토큰 없음, 비인증 상태로 설정');
         setAuth({
           ...initialState,
           loading: false,
@@ -59,17 +60,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return;
       }
 
+      // JWT 토큰이 있으면 JWT 기반 인증 시도
+      console.log('🔍 AuthContext: JWT 토큰 있음, JWT 기반 인증 확인');
       try {
-        const response = await authService.getCurrentUser();
+        const jwtResponse = await authService.getCurrentUser();
 
-        if (response.success && response.user) {
+        if (jwtResponse.success && jwtResponse.user) {
+          console.log('✅ AuthContext: JWT 로그인 성공:', jwtResponse.user.username);
           setAuth({
             isAuthenticated: true,
             loading: false,
-            user: response.user,
+            user: jwtResponse.user,
             error: null,
           });
         } else {
+          console.log('❌ AuthContext: JWT 토큰 유효하지 않음');
           authService.removeToken();
           setAuth({
             ...initialState,
@@ -77,6 +82,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           });
         }
       } catch (error) {
+        console.error('❌ AuthContext: JWT 인증 오류:', error);
         authService.removeToken();
         setAuth({
           ...initialState,

@@ -24,7 +24,7 @@ import {
   toggleServerStatus,
 } from '../services/mcpService.js';
 import { loadSettings, saveSettings } from '../config/index.js';
-import { syncAllServerToolsEmbeddings } from '../services/vectorSearchService.js';
+// Vector search service removed
 
 /**
  * 모든 서버 정보 조회
@@ -773,9 +773,7 @@ export const updateSystemConfig = (req: Request, res: Response): void => {
       if (needsSync) {
         console.log('SmartRouting configuration changed - syncing all existing server tools...');
         // Run sync asynchronously to avoid blocking the response
-        syncAllServerToolsEmbeddings().catch((error) => {
-          console.error('Failed to sync server tools embeddings:', error);
-        });
+        // Smart routing embeddings sync removed
       }
     } else {
       res.status(500).json({
