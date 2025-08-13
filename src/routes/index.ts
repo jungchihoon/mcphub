@@ -13,6 +13,7 @@ import {
 } from '../controllers/adminController.js';
 import { deleteUpstreamSession, listUpstreamSessions } from '../controllers/adminUpstreamSessionsController.js';
 import userGroupRoutes from './userGroupRoutes.js';
+import aiRoutes from './aiRoutes.js';
 
 import {
   getPublicConfig,
@@ -953,6 +954,9 @@ export const initRoutes = (app: express.Application): void => {
 
   // 사용자 그룹 관리 라우트
   app.use(`${basePath}/api/user/groups`, userGroupRoutes);
+
+  // AI 기반 자동 구성 시스템 라우트
+  app.use(`${basePath}/api/ai`, aiRoutes);
 
   // REST API 엔드포인트는 Cursor IDE에서 사용하지 않으므로 제거
   // Cursor IDE는 MCP 프로토콜을 통해 /mcp 엔드포인트로 통신함

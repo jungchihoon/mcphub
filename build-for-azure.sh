@@ -23,7 +23,7 @@ FRONTEND_HUB_TAG="$DOCKER_HUB_USERNAME/mcphub-frontend:$VERSION"
 echo "📦 Backend 이미지 빌드 중..."
 docker build \
   --platform linux/amd64 \
-  --build-arg BUILD_ENV=docker \
+  --build-arg BUILD_ENV=production \
   --build-arg INSTALL_PLAYWRIGHT=false \
   --build-arg REQUEST_TIMEOUT=300000 \
   --build-arg BASE_PATH="" \

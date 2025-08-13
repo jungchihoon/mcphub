@@ -652,7 +652,9 @@ export const handleMcpPostRequest = async (req: Request, res: Response): Promise
     try {
       const methods = body.map((m: any) => m?.method).filter(Boolean);
       console.log(`🧩 Batch 요청 수신: ${methods.length}개 메서드 ->`, methods);
-    } catch { }
+    } catch (error) {
+      console.warn('Batch 요청 처리 중 오류 발생:', error);
+    }
     const allNegotiation = body.every((msg: any) => isNegotiationMethod(msg?.method));
     if (allNegotiation) {
       const responses = body.map((msg: any) => {
