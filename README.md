@@ -1,14 +1,15 @@
-# MCPHub v3.0.0 🚀
+# MCPHub v3.0.2 🚀
 
 <div align="center">
 
-**MCP 프로토콜 표준 준수 + 다중 사용자 세션 격리 + 현대적 아키텍처**
+**MCP 프로토콜 표준 준수 + AI 혁신 기능 + 문서화 100% 완성**
 
-[![Version](https://img.shields.io/badge/version-v3.0.0-blue.svg)](https://github.com/jungchihoon/mcphub/releases/tag/v3.0.0)
+[![Version](https://img.shields.io/badge/version-v3.0.2-blue.svg)](https://github.com/jungchihoon/mcphub/releases/tag/v3.0.2)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node.js-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![PostgreSQL](https://img.shields.io/badge/postgresql-%3E%3D14.0.0-blue.svg)](https://postgresql.org/)
 [![MCP Protocol](https://img.shields.io/badge/MCP_Protocol-2025--06--18-brightgreen.svg)](https://modelcontextprotocol.io/)
+[![Documentation](https://img.shields.io/badge/documentation-100%25_complete-brightgreen.svg)](https://github.com/jungchihoon/mcphub/tree/main/docs)
 
 [빠른 시작](#-빠른-시작) • [v3.0 새 기능](#-v30-새로운-기능) • [문서](#-문서-가이드) • [기능](#-핵심-기능) • [API](#-api-문서) • [브랜치 히스토리](BRANCH_HISTORY.md) • [기여하기](#-기여하기)
 

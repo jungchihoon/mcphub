@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  # 🚀 MCPHub 메인 서비스 (성능 모니터링 제거)
+  mcphub:
+    build: .
+    container_name: mcphub-main
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PERFORMANCE_AGENT_URL=http://performance-agent:9090
+      - DATABASE_URL=postgresql://mcphub:password@postgres:5432/mcphub
+    depends_on:
+      - postgres
+      - performance-agent
+    networks:
+      - mcphub-network
+    restart: unless-stopped
+    # 🚨 성능 모니터링 관련 설정 제거
+    # - 성능 체크 로직 비활성화
+    # - 외부 에이전트에 의존
+
+  # 📊 성능 모니터링 에이전트 (별도 컨테이너)
+  performance-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.performance-agent
+    container_name: mcphub-performance-agent
+    ports:
+      - "9090:9090"
+    environment:
+      - NODE_ENV=production
+      - COLLECTION_INTERVAL=5000
+      - BUFFER_SIZE=1000
+      - MAX_RETRIES=3
+      - TIMEOUT=10000
+    volumes:
+      # 🐳 Docker 컨테이너 메트릭 접근
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # 📊 시스템 메트릭 접근
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    networks:
+      - mcphub-network
+    restart: unless-stopped
+    # 🔍 호스트 네트워크 접근으로 정확한 메트릭 수집
+    network_mode: host
+    privileged: true
+
+  # 🗄️ PostgreSQL 데이터베이스
+  postgres:
+    image: postgres:15-alpine
+    container_name: mcphub-postgres
+    environment:
+      - POSTGRES_DB=mcphub
+      - POSTGRES_USER=mcphub
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - mcphub-network
+    restart: unless-stopped
+
+  # 📈 Prometheus (선택사항 - 고급 모니터링)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mcphub-prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - mcphub-network
+    restart: unless-stopped
+
+  # 📊 Grafana (선택사항 - 시각화)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mcphub-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - mcphub-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  mcphub-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -1,12 +1,23 @@
 // AI 기반 자동 구성 시스템 - API 라우터
 // 생성일: 2025년 8월 13일
 
-import { Router, Request, Response } from 'express';
+import { Request, Response, Router } from 'express';
 import { BasicNLPProcessor } from '../services/ai/nlpProcessor';
 import { AutoConfigurationError } from '../types/ai';
+import { CircuitBreakerFactory } from '../utils/circuitBreaker';
+import { RetryStrategies } from '../utils/retryLogic';
 
 const router = Router();
 const nlpProcessor = new BasicNLPProcessor();
+
+// 🛡️ 서킷 브레이커 및 재시도 로직 초기화
+const aiCircuitBreaker = CircuitBreakerFactory.getInstance('ai-service', {
+  failureThreshold: 3,
+  recoveryTimeout: 30000,
+  halfOpenMaxRequests: 2
+});
+
+const aiRetryLogic = RetryStrategies.networkRetry();
 
 /**
  * @route POST /api/ai/configure
@@ -44,8 +55,27 @@ router.post('/configure', async (req: Request, res: Response) => {
 
     console.log(`🚀 AI 자동 구성 요청 수신: "${userInput}"`);
 
-    // NLP 처리
-    const nlpResult = await nlpProcessor.processUserInput(userInput);
+    // 🛡️ 서킷 브레이커로 NLP 처리 실행
+    const nlpResult = await aiCircuitBreaker.execute(
+      async () => {
+        // 🔄 재시도 로직으로 NLP 처리 실행
+        return await aiRetryLogic.execute(
+          async () => await nlpProcessor.processUserInput(userInput),
+          'AI 자동 구성'
+        );
+      },
+      async () => {
+        // 🚨 폴백: 기본 분석 결과 반환
+        console.log(`🔄 AI 자동 구성 폴백 실행`);
+        return {
+          intent: { action: 'fallback', target: 'system', confidence: 50 },
+          requirements: { intent: { action: 'fallback', target: 'system', confidence: 50 } },
+          confidence: 50,
+          suggestions: ['기본 구성을 사용해주세요.'],
+          errors: ['AI 분석 서비스 일시적 장애']
+        };
+      }
+    );
 
     // 응답 생성
     const response = {
@@ -81,7 +111,7 @@ router.post('/configure', async (req: Request, res: Response) => {
       success: false,
       error: 'AI 자동 구성 처리 중 오류가 발생했습니다.',
       code: 'INTERNAL_ERROR',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
     });
   }
 });
@@ -129,7 +159,7 @@ router.post('/intent', async (req: Request, res: Response) => {
       success: false,
       error: '의도 추출 처리 중 오류가 발생했습니다.',
       code: 'INTENT_EXTRACTION_ERROR',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
     });
   }
 });
@@ -177,7 +207,7 @@ router.post('/requirements', async (req: Request, res: Response) => {
       success: false,
       error: '요구사항 추출 처리 중 오류가 발생했습니다.',
       code: 'REQUIREMENTS_EXTRACTION_ERROR',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
     });
   }
 });
@@ -293,7 +323,7 @@ router.post('/validate', async (req: Request, res: Response) => {
       success: false,
       error: '입력 유효성 검사 처리 중 오류가 발생했습니다.',
       code: 'VALIDATION_ERROR',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
     });
   }
 });

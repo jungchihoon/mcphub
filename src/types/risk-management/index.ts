@@ -18,7 +18,7 @@ export interface DistributedMCPHub {
 
 export type HubType = 'primary' | 'secondary' | 'edge' | 'backup';
 export type HubLocation = 'us-east' | 'us-west' | 'eu-central' | 'ap-northeast' | 'sa-east' | 'af-south';
-export type HealthStatus = 'healthy' | 'degraded' | 'unhealthy' | 'critical' | 'maintenance';
+export type HealthStatusType = 'healthy' | 'degraded' | 'unhealthy' | 'critical' | 'maintenance';
 
 export interface LoadBalancingConfig {
     algorithm: LoadBalancingAlgorithm;
@@ -69,7 +69,7 @@ export interface HealthMetrics {
 
 export interface HealthStatus {
     hubId: string;
-    status: HealthStatus;
+    status: HealthStatusType;
     lastCheck: Date;
     metrics: HealthMetrics;
     issues: HealthIssue[];
@@ -249,7 +249,7 @@ export interface ResourceUsageMetrics {
     cpu: CPUUsageMetrics;
     memory: MemoryUsageMetrics;
     disk: DiskUsageMetrics;
-    network: NetworkUsageMetrics;
+    network: NetworkMetrics;
 }
 
 export interface CPUUsageMetrics {
