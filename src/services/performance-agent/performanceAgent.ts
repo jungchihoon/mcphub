@@ -1,4 +1,4 @@
-import { HealthMetrics, PerformanceConfig } from '../../types/risk-management';
+import { HealthMetrics, PerformanceConfig } from '../../types/risk-management.js';
 
 /**
  * 🚀 성능 모니터링 에이전트

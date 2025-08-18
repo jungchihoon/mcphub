@@ -2,7 +2,7 @@
 // 생성일: 2025년 8월 13일
 // 목적: 사용자 요구사항과 MCP 서버를 자동으로 매칭하는 고급 알고리즘
 
-import { MCPServer, Requirements, SecurityRequirement } from '../../../../types/ai';
+import { MCPServer, Requirements, SecurityRequirement } from '../../../../types/ai.js';
 
 export interface ServerMatch {
     server: MCPServer;

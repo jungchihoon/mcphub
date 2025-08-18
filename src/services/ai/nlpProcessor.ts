@@ -1,7 +1,7 @@
 // AI 기반 자동 구성 시스템 - 자연어 처리 엔진
 // 생성일: 2025년 8월 13일
 
-import { UserIntent, Requirements, TechnicalConstraint, PerformanceRequirement, SecurityRequirement, IntegrationRequirement } from '../../types/ai';
+import { IntegrationRequirement, PerformanceRequirement, Requirements, SecurityRequirement, TechnicalConstraint, UserIntent } from '../../types/ai.js';
 
 export interface NLPProcessingResult {
   intent: UserIntent;
@@ -52,11 +52,11 @@ export class BasicNLPProcessor {
 
       // 기본 의도 추출
       const intentResult = this.extractBasicIntent(input);
-      
+
       // 제약사항 및 선호사항 추출
       const constraints = this.extractConstraints(input);
       const preferences = this.extractPreferences(input);
-      
+
       // 신뢰도 계산
       const confidence = this.calculateConfidence(intentResult, constraints, preferences);
 
@@ -89,16 +89,16 @@ export class BasicNLPProcessor {
 
       // 의도 추출
       const intent = await this.extractIntent(input);
-      
+
       // 기술적 제약사항 추출
       const technicalConstraints = this.extractTechnicalConstraints(input);
-      
+
       // 성능 요구사항 추출
       const performanceRequirements = this.extractPerformanceRequirements(input);
-      
+
       // 보안 요구사항 추출
       const securityRequirements = this.extractSecurityRequirements(input);
-      
+
       // 연동 요구사항 추출
       const integrationRequirements = this.extractIntegrationRequirements(input);
 
@@ -131,13 +131,13 @@ export class BasicNLPProcessor {
 
       // 요구사항 추출
       const requirements = await this.extractRequirements(input);
-      
+
       // 신뢰도 계산
       const confidence = requirements.intent.confidence;
-      
+
       // 제안사항 생성
       const suggestions = this.generateSuggestions(requirements);
-      
+
       // 에러 검증
       const errors = this.validateRequirements(requirements);
 
@@ -166,19 +166,19 @@ export class BasicNLPProcessor {
    */
   private extractBasicIntent(input: string): IntentExtractionResult {
     const lowerInput = input.toLowerCase();
-    
+
     // 액션 추출
     const action = this.findBestMatch(lowerInput, this.actionKeywords) || '구성';
-    
+
     // 타겟 추출
     const target = this.findBestMatch(lowerInput, this.targetKeywords) || '시스템';
-    
+
     // 제약사항 추출
     const constraints = this.extractConstraints(input);
-    
+
     // 선호사항 추출
     const preferences = this.extractPreferences(input);
-    
+
     // 신뢰도 계산
     const confidence = this.calculateBasicConfidence(lowerInput, action, target);
 
@@ -419,7 +419,7 @@ export class BasicNLPProcessor {
     }
 
     // 키워드 밀도 점수
-    const matchedKeywords = this.actionKeywords.filter(keyword => 
+    const matchedKeywords = this.actionKeywords.filter(keyword =>
       input.includes(keyword.toLowerCase())
     ).length;
     confidence += Math.min(matchedKeywords * 5, 20);

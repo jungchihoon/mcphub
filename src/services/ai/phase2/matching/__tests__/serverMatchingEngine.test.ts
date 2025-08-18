@@ -2,8 +2,8 @@
 // 생성일: 2025년 8월 13일
 // 목적: 매칭 엔진의 정확성 및 안정성 검증
 
-import { MCPServer, Requirements } from '../../../../../types/ai';
-import { MatchingResult, MCPServerMatchingEngine, ServerMatch } from '../serverMatchingEngine';
+import { MCPServer, Requirements } from '../../../../../types/ai.js';
+import { MatchingResult, MCPServerMatchingEngine, ServerMatch } from '../serverMatchingEngine.js';
 
 // 🧪 테스트 데이터 준비
 const mockRequirements: Requirements = {

@@ -5,7 +5,7 @@
  * 생성일: 2025년 8월 13일
  */
 
-import { CircuitBreaker, CircuitBreakerFactory, CircuitState } from '../circuitBreaker';
+import { CircuitBreaker, CircuitBreakerFactory, CircuitState } from '../circuitBreaker.js';
 
 describe('CircuitBreaker', () => {
     let circuitBreaker: CircuitBreaker;

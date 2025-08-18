@@ -3,10 +3,10 @@ import {
     InnovationFeature,
     IntegrationConfig,
     PlatformStatus
-} from '../../types/innovation-platform';
-import { MCPServerMatchingEngine } from '../ai/phase2/matching/serverMatchingEngine';
-import { RealTimePerformancePredictor } from '../performance-prediction/realTimePerformancePredictor';
-import { PredictiveFailureSystem } from '../risk-management/prediction/predictiveFailureSystem';
+} from '../../types/innovation-platform.js';
+import { MCPServerMatchingEngine } from '../ai/phase2/matching/serverMatchingEngine.js';
+import { RealTimePerformancePredictor } from '../performance-prediction/realTimePerformancePredictor.js';
+import { PredictiveFailureSystem } from '../risk-management/prediction/predictiveFailureSystem.js';
 
 /**
  * 🌐 통합 혁신 플랫폼

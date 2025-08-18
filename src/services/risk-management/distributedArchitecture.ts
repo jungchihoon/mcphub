@@ -2,17 +2,7 @@
 // 생성일: 2025년 8월 13일
 // 목적: MCPHub의 단일 장애점 문제를 해결하는 분산형 아키텍처
 
-import { 
-  DistributedMCPHub, 
-  HubType, 
-  HubLocation, 
-  HealthStatus,
-  LoadBalancingAlgorithm,
-  FailoverConfig,
-  ReplicationType,
-  ConsistencyLevel,
-  RiskManagementError
-} from '../../types/risk-management';
+import { RiskManagementError } from '../../types/risk-management.js';
 
 export interface MCPRequest {
   id: string;
@@ -67,7 +57,7 @@ export class DistributedMCPHubArchitecture {
     this.loadBalancer = new LoadBalancer(this.hubs, this.configuration.loadBalancing);
     this.failoverManager = new FailoverManager(this.hubs, this.configuration.failover);
     this.replicationManager = new ReplicationManager(this.hubs, this.configuration.replication);
-    
+
     this.initializeHubs();
     this.startHealthMonitoring();
   }
@@ -80,26 +70,26 @@ export class DistributedMCPHubArchitecture {
     try {
       // 1. 최적 허브 선택
       const selectedHub = await this.selectOptimalHub(request);
-      
+
       // 2. 요청 전송 및 처리
       const response = await this.processRequest(request, selectedHub);
-      
+
       // 3. 응답 검증 및 후처리
       const validatedResponse = await this.validateResponse(response, request);
-      
+
       // 4. 성능 메트릭 업데이트
       const processingTime = performance.now() - startTime;
       this.updatePerformanceMetrics(selectedHub.hubId, processingTime, true);
-      
+
       console.log(`✅ MCP 요청 처리 완료: ${processingTime.toFixed(2)}ms, 허브: ${selectedHub.hubId}`);
-      
+
       return {
         ...validatedResponse,
         processingTime: Math.round(processingTime)
       };
     } catch (error) {
       console.error('❌ MCP 요청 처리 실패:', error);
-      
+
       // 장애 발생 시 장애 전환 시도
       return await this.handleRequestFailure(request, error);
     }
@@ -108,7 +98,7 @@ export class DistributedMCPHubArchitecture {
   // 🎯 최적 허브 선택
   private async selectOptimalHub(request: MCPRequest): Promise<DistributedMCPHub> {
     const decision = await this.loadBalancer.selectHub(request);
-    
+
     if (!decision.selectedHub) {
       throw new RiskManagementError(
         '사용 가능한 허브가 없습니다.',
@@ -155,11 +145,11 @@ export class DistributedMCPHubArchitecture {
   // ❌ 요청 실패 처리
   private async handleRequestFailure(request: MCPRequest, error: any): Promise<MCPResponse> {
     console.log('🔄 장애 전환 시도 시작');
-    
+
     try {
       // 장애 전환 시도
       const failoverResult = await this.failoverManager.executeFailover(request);
-      
+
       if (failoverResult.success) {
         console.log(`✅ 장애 전환 성공: ${failoverResult.targetHubId}`);
         return await this.routeRequest(request); // 재시도
@@ -168,7 +158,7 @@ export class DistributedMCPHubArchitecture {
       }
     } catch (failoverError) {
       console.error('❌ 장애 전환 실패:', failoverError);
-      
+
       // 최종 실패 응답
       return {
         id: this.generateResponseId(),
@@ -227,10 +217,10 @@ export class DistributedMCPHubArchitecture {
     lastUpdated: Date;
   }> {
     const hubStatuses = Array.from(this.hubs.values()).map(hub => hub.healthStatus);
-    
+
     const healthyCount = hubStatuses.filter(status => status === 'healthy').length;
     const degradedCount = hubStatuses.filter(status => status === 'degraded').length;
-    const unhealthyCount = hubStatuses.filter(status => 
+    const unhealthyCount = hubStatuses.filter(status =>
       status === 'unhealthy' || status === 'critical'
     ).length;
 
@@ -427,7 +417,7 @@ export class DistributedMCPHubArchitecture {
         console.error('❌ 헬스 체크 중 오류 발생:', error);
       }
     }, this.configuration.healthCheckInterval);
-    
+
     console.log(`📊 헬스 모니터링 시작 (간격: ${this.configuration.healthCheckInterval}ms)`);
   }
 }
@@ -454,13 +444,13 @@ export interface DistributedArchitectureConfig {
 
 // 📊 헬스 모니터
 class HealthMonitor {
-  constructor(private readonly hubs: Map<string, DistributedMCPHub>) {}
+  constructor(private readonly hubs: Map<string, DistributedMCPHub>) { }
 
   async performHealthCheck(): Promise<void> {
-    const checkPromises = Array.from(this.hubs.keys()).map(hubId => 
+    const checkPromises = Array.from(this.hubs.keys()).map(hubId =>
       this.checkHub(hubId)
     );
-    
+
     await Promise.allSettled(checkPromises);
   }
 
@@ -477,15 +467,15 @@ class HealthMonitor {
     try {
       // 실제 구현에서는 허브와의 통신을 통한 헬스 체크
       const responseTime = Math.random() * 100; // 모의 응답 시간
-      
+
       if (responseTime > 80) {
         status = 'degraded';
         errorCount = 1;
       }
-      
+
       hub.healthStatus = status;
       hub.lastHealthCheck = new Date();
-      
+
       return {
         hubId,
         status,
@@ -497,7 +487,7 @@ class HealthMonitor {
     } catch (error) {
       hub.healthStatus = 'unhealthy';
       hub.lastHealthCheck = new Date();
-      
+
       return {
         hubId,
         status: 'unhealthy',
@@ -515,7 +505,7 @@ class LoadBalancer {
   constructor(
     private readonly hubs: Map<string, DistributedMCPHub>,
     private readonly config: DistributedArchitectureConfig['loadBalancing']
-  ) {}
+  ) { }
 
   async selectHub(request: MCPRequest): Promise<LoadBalancingDecision> {
     const availableHubs = Array.from(this.hubs.values())
@@ -584,15 +574,15 @@ class LoadBalancer {
 
   private calculateHealthScore(hub: DistributedMCPHub): number {
     let score = 100;
-    
+
     if (hub.healthStatus === 'degraded') score -= 20;
     if (hub.healthStatus === 'unhealthy') score -= 50;
     if (hub.healthStatus === 'critical') score -= 80;
-    
+
     const loadPercentage = (hub.currentLoad / hub.capacity) * 100;
     if (loadPercentage > 80) score -= 20;
     else if (loadPercentage > 60) score -= 10;
-    
+
     return Math.max(0, score);
   }
 
@@ -600,7 +590,7 @@ class LoadBalancer {
     const baseLatency = hub.metadata.networkLatency;
     const loadFactor = hub.currentLoad / hub.capacity;
     const loadPenalty = loadFactor * 50; // 부하에 따른 페널티
-    
+
     return baseLatency + loadPenalty;
   }
 }
@@ -610,7 +600,7 @@ class FailoverManager {
   constructor(
     private readonly hubs: Map<string, DistributedMCPHub>,
     private readonly config: DistributedArchitectureConfig['failover']
-  ) {}
+  ) { }
 
   async executeFailover(request: any): Promise<{ success: boolean; targetHubId?: string }> {
     // 장애 전환 로직 구현
@@ -623,7 +613,7 @@ class ReplicationManager {
   constructor(
     private readonly hubs: Map<string, DistributedMCPHub>,
     private readonly config: DistributedArchitectureConfig['replication']
-  ) {}
+  ) { }
 
   async syncData(): Promise<void> {
     // 데이터 복제 로직 구현

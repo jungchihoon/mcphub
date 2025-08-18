@@ -1,4 +1,4 @@
-export { HealthMetrics } from '../risk-management';
+export { HealthMetrics } from '../risk-management.js';
 
 /**
  * 🚀 실시간 성능 예측 및 자동 스케일링 타입 정의

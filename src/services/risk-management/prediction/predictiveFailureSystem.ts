@@ -2,14 +2,7 @@
 // 생성일: 2025년 8월 13일
 // 목적: MCPHub의 장애를 사전에 예측하고 예방하는 AI 시스템
 
-import {
-  ContributingFactor,
-  FailureImpact,
-  FailurePrediction,
-  HealthMetrics,
-  PerformanceMetrics,
-  RiskManagementError
-} from '../../../types/risk-management';
+import { ContributingFactor, FailureImpact, FailurePrediction, HealthMetrics, PerformanceMetrics, RiskManagementError } from '../../../types/risk-management.js';
 
 export interface PredictionModel {
   id: string;

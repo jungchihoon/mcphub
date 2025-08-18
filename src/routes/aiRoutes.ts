@@ -2,10 +2,10 @@
 // 생성일: 2025년 8월 13일
 
 import { Request, Response, Router } from 'express';
-import { BasicNLPProcessor } from '../services/ai/nlpProcessor';
-import { AutoConfigurationError } from '../types/ai';
-import { CircuitBreakerFactory } from '../utils/circuitBreaker';
-import { RetryStrategies } from '../utils/retryLogic';
+import { BasicNLPProcessor } from '../services/ai/nlpProcessor.js';
+import { AutoConfigurationError } from '../types/ai.js';
+import { CircuitBreakerFactory } from '../utils/circuitBreaker.js';
+import { RetryStrategies } from '../utils/retryLogic.js';
 
 const router = Router();
 const nlpProcessor = new BasicNLPProcessor();
@@ -96,6 +96,7 @@ router.post('/configure', async (req: Request, res: Response) => {
     res.status(200).json(response);
 
   } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error(`❌ AI 자동 구성 실패:`, error);
 
     if (error instanceof AutoConfigurationError) {
@@ -110,8 +111,8 @@ router.post('/configure', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: 'AI 자동 구성 처리 중 오류가 발생했습니다.',
-      code: 'INTERNAL_ERROR',
-      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
+      code: 'AI_CONFIGURE_ERROR',
+      details: process.env.NODE_ENV === 'development' ? errMsg : undefined
     });
   }
 });
@@ -201,13 +202,14 @@ router.post('/requirements', async (req: Request, res: Response) => {
     res.status(200).json(response);
 
   } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error(`❌ 요구사항 추출 실패:`, error);
 
     res.status(500).json({
       success: false,
       error: '요구사항 추출 처리 중 오류가 발생했습니다.',
       code: 'REQUIREMENTS_EXTRACTION_ERROR',
-      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
+      details: process.env.NODE_ENV === 'development' ? errMsg : undefined
     });
   }
 });
@@ -317,13 +319,14 @@ router.post('/validate', async (req: Request, res: Response) => {
     res.status(200).json(response);
 
   } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error(`❌ 입력 유효성 검사 실패:`, error);
 
     res.status(500).json({
       success: false,
       error: '입력 유효성 검사 처리 중 오류가 발생했습니다.',
       code: 'VALIDATION_ERROR',
-      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
+      details: process.env.NODE_ENV === 'development' ? errMsg : undefined
     });
   }
 });

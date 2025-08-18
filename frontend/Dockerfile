@@ -5,7 +5,7 @@
 # Backend API 서버와 분리되어 독립적으로 실행되며, 정적 파일로 빌드됩니다.
 
 # 멀티스테이지 빌드를 사용하여 빌드 환경과 실행 환경 분리  
-FROM node:22 AS builder
+FROM node:22-alpine AS builder
 
 # 작업 디렉토리 설정 (루트 프로젝트)
 WORKDIR /app

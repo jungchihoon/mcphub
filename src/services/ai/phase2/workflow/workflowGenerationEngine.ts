@@ -2,8 +2,8 @@
 // 생성일: 2025년 8월 13일
 // 목적: 사용자 의도와 매칭된 MCP 서버를 기반으로 자동 워크플로우 생성
 
-import { UserIntent, Requirements, WorkflowDefinition, WorkflowStep } from '../../../types/ai';
-import { ServerMatch } from '../matching/serverMatchingEngine';
+import { Requirements, UserIntent, WorkflowDefinition, WorkflowStep } from '../../../types/ai.js';
+import { ServerMatch } from '../matching/serverMatchingEngine.js';
 
 export interface WorkflowGenerationRequest {
   userIntent: UserIntent;
@@ -56,16 +56,16 @@ export class WorkflowGenerationEngine {
     try {
       // 1. 템플릿 기반 워크플로우 생성
       const templateWorkflow = await this.generateFromTemplate(request);
-      
+
       // 2. AI 기반 커스터마이징
       const customizedWorkflow = await this.customizeWorkflow(templateWorkflow, request);
-      
+
       // 3. 검증 및 최적화
       const validatedWorkflow = await this.validateAndOptimize(customizedWorkflow, request);
-      
+
       // 4. 대안 워크플로우 생성
       const alternatives = await this.generateAlternatives(request, validatedWorkflow);
-      
+
       // 5. 결과 생성
       const result: WorkflowGenerationResult = {
         workflow: validatedWorkflow,
@@ -78,7 +78,7 @@ export class WorkflowGenerationEngine {
       };
 
       console.log(`✅ 워크플로우 생성 완료: ${result.workflow.steps.length}개 단계, 신뢰도: ${result.confidence}%`);
-      
+
       return result;
     } catch (error) {
       console.error('❌ 워크플로우 생성 중 오류 발생:', error);
@@ -89,13 +89,13 @@ export class WorkflowGenerationEngine {
   // 📋 템플릿 기반 워크플로우 생성
   private async generateFromTemplate(request: WorkflowGenerationRequest): Promise<WorkflowDefinition> {
     const template = this.findBestTemplate(request);
-    
+
     if (!template) {
       return this.createCustomWorkflow(request);
     }
 
     console.log(`📋 템플릿 사용: ${template.name} (${template.category})`);
-    
+
     return {
       id: this.generateWorkflowId(),
       name: `${request.userIntent.action} 워크플로우`,
@@ -112,11 +112,11 @@ export class WorkflowGenerationEngine {
 
   // 🎨 워크플로우 커스터마이징
   private async customizeWorkflow(
-    workflow: WorkflowDefinition, 
+    workflow: WorkflowDefinition,
     request: WorkflowGenerationRequest
   ): Promise<WorkflowDefinition> {
     console.log('🎨 워크플로우 커스터마이징 시작');
-    
+
     const customizedSteps = await Promise.all(
       workflow.steps.map(async (step, index) => {
         const generator = this.stepGenerators.get(step.type);
@@ -140,11 +140,11 @@ export class WorkflowGenerationEngine {
 
   // ✅ 검증 및 최적화
   private async validateAndOptimize(
-    workflow: WorkflowDefinition, 
+    workflow: WorkflowDefinition,
     request: WorkflowGenerationRequest
   ): Promise<WorkflowDefinition> {
     console.log('✅ 워크플로우 검증 및 최적화 시작');
-    
+
     // 검증 규칙 적용
     for (const rule of this.validationRules) {
       const validationResult = await rule.validate(workflow, request);
@@ -156,17 +156,17 @@ export class WorkflowGenerationEngine {
 
     // 성능 최적화
     workflow = this.optimizeWorkflow(workflow);
-    
+
     return workflow;
   }
 
   // 🔄 대안 워크플로우 생성
   private async generateAlternatives(
-    request: WorkflowGenerationRequest, 
+    request: WorkflowGenerationRequest,
     primaryWorkflow: WorkflowDefinition
   ): Promise<WorkflowDefinition[]> {
     const alternatives: WorkflowDefinition[] = [];
-    
+
     // 다른 복잡도로 대안 생성
     if (request.complexity !== 'simple') {
       const simpleAlternative = await this.generateWorkflow({
@@ -175,7 +175,7 @@ export class WorkflowGenerationEngine {
       });
       alternatives.push(simpleAlternative.workflow);
     }
-    
+
     if (request.complexity !== 'complex') {
       const complexAlternative = await this.generateWorkflow({
         ...request,
@@ -190,7 +190,7 @@ export class WorkflowGenerationEngine {
   // 🎯 최적 템플릿 찾기
   private findBestTemplate(request: WorkflowGenerationRequest): WorkflowTemplate | null {
     const candidates = Array.from(this.workflowTemplates.values())
-      .filter(template => 
+      .filter(template =>
         template.category === request.userIntent.category ||
         template.complexity === request.complexity
       )
@@ -202,7 +202,7 @@ export class WorkflowGenerationEngine {
   // 🔧 커스텀 워크플로우 생성
   private createCustomWorkflow(request: WorkflowGenerationRequest): WorkflowDefinition {
     console.log('🔧 커스텀 워크플로우 생성');
-    
+
     const steps: WorkflowStep[] = [
       {
         id: 'step-1',
@@ -290,25 +290,25 @@ export class WorkflowGenerationEngine {
 
   // 📊 워크플로우 신뢰도 계산
   private calculateWorkflowConfidence(
-    workflow: WorkflowDefinition, 
+    workflow: WorkflowDefinition,
     request: WorkflowGenerationRequest
   ): number {
     let confidence = 70; // 기본 신뢰도
-    
+
     // 매칭된 서버 수에 따른 보너스
     if (request.matchedServers.length > 0) {
       const avgScore = request.matchedServers.reduce((sum, s) => sum + s.score, 0) / request.matchedServers.length;
       confidence += Math.min(20, avgScore * 0.2);
     }
-    
+
     // 복잡도에 따른 조정
     if (request.complexity === 'simple') confidence += 10;
     else if (request.complexity === 'complex') confidence -= 10;
-    
+
     // 단계 수에 따른 조정
     if (workflow.steps.length <= 3) confidence += 5;
     else if (workflow.steps.length >= 8) confidence -= 5;
-    
+
     return Math.max(0, Math.min(100, Math.round(confidence)));
   }
 
@@ -316,44 +316,44 @@ export class WorkflowGenerationEngine {
   private estimateExecutionTime(workflow: WorkflowDefinition): number {
     const baseTime = workflow.steps.length * 2; // 기본 2분/단계
     const timeoutAdjustment = workflow.steps.reduce((sum, step) => sum + step.timeout, 0) / 60000; // 분 단위
-    
+
     return Math.round(baseTime + timeoutAdjustment);
   }
 
   // 📋 전제조건 추출
   private extractPrerequisites(workflow: WorkflowDefinition): string[] {
     const prerequisites: string[] = [];
-    
+
     workflow.steps.forEach(step => {
       if (step.parameters?.prerequisites) {
         prerequisites.push(...step.parameters.prerequisites);
       }
     });
-    
+
     return [...new Set(prerequisites)]; // 중복 제거
   }
 
   // ⚠️ 위험 요소 식별
   private identifyRisks(workflow: WorkflowDefinition): string[] {
     const risks: string[] = [];
-    
+
     // 타임아웃 위험
     const longTimeoutSteps = workflow.steps.filter(step => step.timeout > 120000);
     if (longTimeoutSteps.length > 0) {
       risks.push(`${longTimeoutSteps.length}개 단계에서 긴 타임아웃으로 인한 지연 위험`);
     }
-    
+
     // 재시도 위험
     const highRetrySteps = workflow.steps.filter(step => step.retry.maxRetries > 5);
     if (highRetrySteps.length > 0) {
       risks.push(`${highRetrySteps.length}개 단계에서 과도한 재시도로 인한 리소스 소모 위험`);
     }
-    
+
     // 복잡성 위험
     if (workflow.steps.length > 10) {
       risks.push('복잡한 워크플로우로 인한 디버깅 및 유지보수 어려움');
     }
-    
+
     return risks;
   }
 
@@ -361,10 +361,10 @@ export class WorkflowGenerationEngine {
   private optimizeWorkflow(workflow: WorkflowDefinition): WorkflowDefinition {
     // 병렬 실행 가능한 단계 식별
     const parallelSteps = this.identifyParallelSteps(workflow.steps);
-    
+
     // 타임아웃 최적화
     const optimizedSteps = workflow.steps.map(step => this.optimizeStep(step));
-    
+
     return {
       ...workflow,
       steps: optimizedSteps,
@@ -380,14 +380,14 @@ export class WorkflowGenerationEngine {
   // 🔄 병렬 실행 단계 식별
   private identifyParallelSteps(steps: WorkflowStep[]): string[][] {
     const parallelGroups: string[][] = [];
-    const independentSteps = steps.filter(step => 
+    const independentSteps = steps.filter(step =>
       !step.parameters?.dependencies || step.parameters.dependencies.length === 0
     );
-    
+
     if (independentSteps.length > 1) {
       parallelGroups.push(independentSteps.map(s => s.id));
     }
-    
+
     return parallelGroups;
   }
 
@@ -398,13 +398,13 @@ export class WorkflowGenerationEngine {
     if (step.timeout > 300000) { // 5분 이상
       optimizedTimeout = Math.min(step.timeout, 300000);
     }
-    
+
     // 재시도 최적화
     let optimizedRetry = step.retry;
     if (step.retry.maxRetries > 5) {
       optimizedRetry = { ...step.retry, maxRetries: 5 };
     }
-    
+
     return {
       ...step,
       timeout: optimizedTimeout,
@@ -518,8 +518,8 @@ export class WorkflowGenerationEngine {
         };
       },
       fix: async (workflow, result) => {
-        const fixedSteps = workflow.steps.map(step => 
-          step.timeout > 300000 
+        const fixedSteps = workflow.steps.map(step =>
+          step.timeout > 300000
             ? { ...step, timeout: 300000 }
             : step
         );

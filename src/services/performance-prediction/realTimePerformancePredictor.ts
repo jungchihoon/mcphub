@@ -1,4 +1,4 @@
-import { HealthMetrics, PerformancePrediction, ResourceDemand, ScalingDecision } from '../../types/performance-prediction';
+import { HealthMetrics, PerformancePrediction, ResourceDemand, ScalingDecision } from '../../types/performance-prediction.js';
 
 /**
  * 🚀 실시간 성능 예측 및 자동 스케일링 시스템
