@@ -3,6 +3,7 @@
 > **2025-08-13 업데이트**: 🎉 **문서화 100% 완성!** 18개 핵심 개발 문서 완성 및 체계적 인덱스 구축
 
 ### 🚀 빠른 시작
+- [**MCPHub란 무엇인가?**](what-is-mcphub.md) 🆕 **NEW** - MCPHub를 5분 만에 이해하는 완벽 가이드
 - [빠른 시작 가이드](quickstart.mdx) - 5분 만에 MCPHub 시작
 - [설치 가이드](installation.mdx) - 상세 설치 방법
 - [환경 설정](configuration/) - 환경변수, MCP 설정, Docker 등
